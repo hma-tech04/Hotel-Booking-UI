@@ -7,62 +7,70 @@ function BookingManagement() {
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
+    // Dữ liệu giả lập
     setBookings([
       {
-        id: 1,
-        userId: 1,
-        total: 500,
+        BookingId: 1,
+        UserId: 1,
         rooms: [
-          { roomType: "Superior Single Room", checkIn: "2023-04-01", checkOut: "2023-04-05",price: 200 },
-          { roomType: "Deluxe Double Room", checkIn: "2023-04-01", checkOut: "2023-04-05",price: 300 }
+          { RoomType: "Superior Single Room", CheckInDate: "2023-04-01", CheckOutDate: "2023-04-05", Price: 200 }
         ],
       },
       {
-        id: 2,
-        userId: 2,
-        total: 750,
+        BookingId: 2,
+        UserId: 1,
         rooms: [
-          { roomType: "Luxury Suite", checkIn: "2023-05-10", checkOut: "2023-05-15",price: 750 }
+          { RoomType: "Luxury Suite", CheckInDate: "2023-05-10", CheckOutDate: "2023-05-15", Price: 750 }
         ],
       }
     ]);
 
     setUsers([
-      { id: 1, name: "Nguyễn Văn A", phone: "0123456789" },
-      { id: 2, name: "Trần Thị B", phone: "0987654321" }
+      { UserId: 1, FullName: "Nguyễn Văn A", Phone: "0123456789" }
     ]);
   }, []);
 
+  const calculateNights = (checkIn, checkOut) => {
+    const start = new Date(checkIn);
+    const end = new Date(checkOut);
+    return Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+  };
+
+  const calculateTotal = (rooms) => {
+    return rooms.reduce((sum, room) => sum + calculateNights(room.CheckInDate, room.CheckOutDate) * room.Price, 0);
+  };
+
   return (
     <div className="container">
-      <h2 className="title">Quản lý đặt phòng</h2>
+      <h2 className="title">Lịch sử đặt phòng</h2>
       <div className="table-container">
         <table className="booking-table">
           <thead>
             <tr>
-              <th>Tên Khách hàng</th>
-              <th>Số điện thoại</th>
-              <th>Mã đơn</th>
+              <th>STT</th>
+              <th>Kiểu phòng</th>
+              <th>Số đêm</th>
               <th>Tổng tiền</th>
               <th>Hành động</th>
             </tr>
           </thead>
           <tbody>
-            {bookings.map((booking) => {
-              const user = users.find((u) => u.id === booking.userId);
-              return (
-                <tr key={booking.id}>
-                  <td>{user ? user.name : "Không xác định"}</td>
-                  <td>{user ? user.phone : "Không xác định"}</td>
-                  <td>{booking.id}</td>
-                  <td className="price">${booking.total}</td>
-                  <td className="actions">
-                    <Link to={`/booking-details/${booking.id}`} className="btn view">Xem</Link>
-                    {/*<button className="btn edit">Sửa</button>*/}
-                    {/*<button className="btn delete">Xóa</button>*/}
-                  </td>
+            {bookings.map((booking, index) => {
+              const user = users.find((u) => u.UserId === booking.UserId);
+              const total = calculateTotal(booking.rooms);
+              return booking.rooms.map((room, roomIndex) => (
+                <tr key={`${booking.BookingId}-${roomIndex}`}>
+                  {roomIndex === 0 && <td rowSpan={booking.rooms.length}>{index + 1}</td>}
+                  <td>{room.RoomType}</td>
+                  <td>{calculateNights(room.CheckInDate, room.CheckOutDate)}</td>
+                  {roomIndex === 0 && <td rowSpan={booking.rooms.length} className="price">${total}</td>}
+                  {roomIndex === 0 && (
+                    <td rowSpan={booking.rooms.length} className="actions">
+                      <Link to={`/booking-details/${booking.BookingId}`} className="btn view">Xem</Link>
+                    </td>
+                  )}
                 </tr>
-              );
+              ));
             })}
           </tbody>
         </table>
@@ -71,4 +79,4 @@ function BookingManagement() {
   );
 }
 
-export default BookingManagement
+export default BookingManagement;

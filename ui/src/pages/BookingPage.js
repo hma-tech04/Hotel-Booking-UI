@@ -5,176 +5,104 @@ import "../styles/booking-page.css";
 function BookingPage() {
   const navigate = useNavigate();
 
-  // Dữ liệu mẫu: Một đơn đặt phòng có nhiều phòng với ngày nhận và ngày trả
-  const bookingData = {
-    id: 101,
+  const HotelBookingContext = {
+    BookingId: 101,
     customer: {
-      name: "Nguyễn Văn A",
-      phone: "0123456789",
-      email: "nguyenvana@example.com",
+      UserId: 1,
+      FullName: "Nguyễn Văn A",
+      Email: "nguyenvana@example.com",
     },
     rooms: [
-      { 
-        id: 1, 
-        name: "Superior Single Room", 
-        price: 129.00, 
-        checkIn: "2024-04-10", 
-        checkOut: "2024-04-12",
-        image: "/images/superior-single.jpg" // Đường dẫn tới ảnh phòng 
+      {
+        RoomId: 1,
+        RoomType: "Superior Single Room",
+        Price: 129.0,
+        ImageUrl: "/images/superior-single.jpg",
       },
     ],
   };
 
-  const [customerInfo, setCustomerInfo] = useState(bookingData.customer);
+  const [formData, setFormData] = useState({
+    ...HotelBookingContext.customer,
+    CheckInDate: "",
+    CheckOutDate: "",
+  });
+
   const [paymentMethod, setPaymentMethod] = useState("credit-card");
 
-  // Hàm tính số ngày thuê dựa trên checkIn và checkOut
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
   const calculateNights = (checkIn, checkOut) => {
     const startDate = new Date(checkIn);
     const endDate = new Date(checkOut);
     return Math.max((endDate - startDate) / (1000 * 60 * 60 * 24), 1);
   };
 
-  // Tính tổng tiền (giá phòng * số ngày thuê)
-  const calculateRoomTotal = (price, nights) => {
-    return price * nights;
-  };
-
-  // Tính tổng tiền của tất cả phòng
-  const totalAmount = bookingData.rooms.reduce(
-    (total, room) => total + calculateRoomTotal(room.price, calculateNights(room.checkIn, room.checkOut)),
-    0
-  );
-
-  const handleChange = (e) => {
-    setCustomerInfo({ ...customerInfo, [e.target.name]: e.target.value });
-  };
+  const nights = formData.CheckInDate && formData.CheckOutDate ? calculateNights(formData.CheckInDate, formData.CheckOutDate) : 0;
+  const totalAmount = HotelBookingContext.rooms.reduce((total, room) => total + room.Price * nights, 0);
 
   const handlePayment = () => {
-    if (!customerInfo.name || !customerInfo.phone || !customerInfo.email) {
-      alert("Vui lòng nhập đầy đủ thông tin khách hàng!");
+    if (!formData.FullName || !formData.Phone || !formData.Email || !formData.CheckInDate || !formData.CheckOutDate) {
+      alert("Vui lòng nhập đầy đủ thông tin khách hàng và ngày nhận/trả phòng!");
       return;
     }
-
     alert(`Thanh toán thành công! \nTổng tiền: $${totalAmount.toFixed(2)}`);
     navigate("/");
   };
 
   return (
-    <div className="booking-container">
+    <div>
       <h2>Xác nhận đặt phòng</h2>
-
       <div className="booking-content">
-        {/* Left column: Customer info and payment */}
         <div className="booking-left-column">
-          {/* Form nhập thông tin khách hàng */}
-          <div className="customer-info">
-            <h3>Thông tin khách hàng</h3>
-            <input
-              type="text"
-              name="name"
-              placeholder="Họ và tên"
-              value={customerInfo.name}
-              onChange={handleChange}
-              required
-            />
-            <input
-              type="text"
-              name="phone"
-              placeholder="Số điện thoại"
-              value={customerInfo.phone}
-              onChange={handleChange}
-              required
-            />
-            <input
-              type="email"
-              name="email"
-              placeholder="Email"
-              value={customerInfo.email}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          {/* Thông tin thanh toán */}
-          <div className="payment-info">
-            <h3>Thông tin thanh toán</h3>
-            <div className="payment-room-list">
-              {bookingData.rooms.map((room) => (
-                <p key={room.id} className="payment-room-item">
-                  {room.name} - <span className="price">${room.price.toFixed(2)} / đêm</span>
-                </p>
-              ))}
+          <h3>Phòng đã chọn</h3>
+          {HotelBookingContext.rooms.map((room) => (
+            <div key={room.RoomId} className="room-detail-card">
+              <div className="room-image">
+                <img src={room.ImageUrl} alt={room.RoomType} onError={(e) => { e.target.onerror = null; e.target.src = "src/images/placeholder-room.jpg"; }} />
+              </div>
+              <div className="room-details-list">
+                <div className="room-detail-row">
+                  <span className="detail-label">Kiểu phòng</span>
+                  <span className="detail-value">{room.RoomType}</span>
+                </div>
+                <div className="room-detail-row">
+                  <span className="detail-label">Giá / Đêm</span>
+                  <span className="detail-value price">${room.Price.toFixed(2)}</span>
+                </div>
+              </div>
+              <button className="btn room-detail-btn">Xem chi tiết</button>
             </div>
-            <p><strong>Tổng tiền:</strong> <span className="total-price">${totalAmount.toFixed(2)}</span></p>
-            
-            <label>Chọn phương thức thanh toán:</label>
-            <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)}>
-              <option value="credit-card">Thẻ tín dụng</option>
-              <option value="momo">Momo</option>
-              <option value="bank-transfer">Chuyển khoản ngân hàng</option>
-            </select>
-          </div>
-
-          {/* Nút thanh toán */}
-          <button className="btn pay-btn" onClick={handlePayment}>Thanh toán</button>
+          ))}
         </div>
 
-        {/* Right column: Selected rooms */}
         <div className="booking-right-column">
-          <div className="selected-rooms">
-            <h3>Phòng đã chọn</h3>
-            
-            {bookingData.rooms.map((room) => {
-              const nights = calculateNights(room.checkIn, room.checkOut);
-              const roomTotal = calculateRoomTotal(room.price, nights);
-              
-              return (
-                <div key={room.id} className="room-detail-card">
-                  {/* Room image */}
-                  <div className="room-image">
-                    <img src={room.image} alt={room.name} onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = "/images/placeholder-room.jpg";
-                    }} />
-                  </div>
-                  
-                  {/* Room details list */}
-                  <div className="room-details-list">
-                    <div className="room-detail-row">
-                      <span className="detail-label">Tên phòng</span>
-                      <span className="detail-value">{room.name}</span>
-                    </div>
-                    
-                    <div className="room-detail-row">
-                      <span className="detail-label">Giá / Đêm</span>
-                      <span className="detail-value price">${room.price.toFixed(2)}</span>
-                    </div>
-                    
-                    <div className="room-detail-row">
-                      <span className="detail-label">Ngày nhận</span>
-                      <span className="detail-value">{room.checkIn}</span>
-                    </div>
-                    
-                    <div className="room-detail-row">
-                      <span className="detail-label">Ngày trả</span>
-                      <span className="detail-value">{room.checkOut}</span>
-                    </div>
-                    
-                    <div className="room-detail-row">
-                      <span className="detail-label">Số ngày</span>
-                      <span className="detail-value">{nights}</span>
-                    </div>
-                    
-                    <div className="room-detail-row total-row">
-                      <span className="detail-label">Thành tiền</span>
-                      <span className="detail-value total-price">${roomTotal.toFixed(2)}</span>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+          <h3>Thông tin khách hàng</h3>
+          <input type="text" name="Phone" placeholder="Số điện thoại" value={formData.Phone} onChange={handleChange} required />
+
+          <div className="date-selection">
+            <div className="box">
+              <label>Check-in:</label>
+              <input type="date" name="CheckInDate" value={formData.CheckInDate} onChange={handleChange} required />
+            </div>
+            <div className="box">
+              <label>Check-out:</label>
+              <input type="date" name="CheckOutDate" value={formData.CheckOutDate} onChange={handleChange} required />
+            </div>
           </div>
+
+          <h3>Thông tin thanh toán</h3>
+          <p><strong>Số đêm: </strong><span className="nights-count">{nights}</span></p>
+          <p><strong>Tổng tiền: </strong><span className="total-price">${totalAmount.toFixed(2)}</span></p>
+
+          <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)}>
+            <option value="momo">VNPay</option>
+            <option value="credit-card">Thẻ tín dụng</option>
+            <option value="bank-transfer">Chuyển khoản ngân hàng</option>
+          </select>
+          <button className="btn pay-btn" onClick={handlePayment}>Thanh toán</button>
         </div>
       </div>
     </div>

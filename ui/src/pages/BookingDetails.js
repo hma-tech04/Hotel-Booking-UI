@@ -12,56 +12,58 @@ function BookingDetails() {
     // Dữ liệu giả lập
     const bookingsData = [
       {
-        id: 1,
-        userId: 1,
-        total: 500,
+        BookingId: 1,
+        UserId: 1,
+        TotalPrice: 500,
         rooms: [
-          { roomType: "Superior Single Room", checkIn: "2023-04-01", checkOut: "2023-04-05",price: 200 },
-          { roomType: "Deluxe Double Room", checkIn: "2023-04-01", checkOut: "2023-04-05",price: 300 }
+          { RoomType: "Superior Single Room", CheckInDate: "2023-04-01", CheckOutDate: "2023-04-05", Price: 200 }
         ],
       },
       {
-        id: 2,
-        userId: 2,
-        total: 750,
+        BookingId: 2,
+        UserId: 1,
+        TotalPrice: 750,
         rooms: [
-          { roomType: "Luxury Suite", checkIn: "2023-05-10", checkOut: "2023-05-15",price: 750 }
+          { RoomType: "Luxury Suite", CheckInDate: "2023-05-10", CheckOutDate: "2023-05-15", Price: 750 }
         ],
       }
     ];
 
     const usersData = [
-      { id: 1, name: "Nguyễn Văn A", phone: "0123456789" },
-      { id: 2, name: "Trần Thị B", phone: "0987654321" }
+      { UserId: 1, FullName: "Nguyễn Văn A", Email: "nguyenvana@gmail.com", Phone: "0123456789" }
     ];
 
-    const foundBooking = bookingsData.find((b) => b.id === parseInt(bookingId));
+    const foundBooking = bookingsData.find((b) => b.BookingId === parseInt(bookingId));
     if (foundBooking) {
       setBooking(foundBooking);
-      setUser(usersData.find((u) => u.id === foundBooking.userId));
+      setUser(usersData.find((u) => u.UserId === foundBooking.UserId));
     }
   }, [bookingId]);
+
+  const calculateNights = (checkIn, checkOut) => {
+    const start = new Date(checkIn);
+    const end = new Date(checkOut);
+    return Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+  };
 
   if (!booking || !user) return <p className="error-message">Đơn đặt phòng không tồn tại.</p>;
 
   return (
-    <div className="booking-details-container">
-      <button className="btn-back" onClick={() => navigate(-1)}>
-         Quay lại
-      </button>
-
-      <h2 className="title">Chi tiết đơn đặt phòng #{booking.id}</h2>
+    <div>
+      <h2 className="title">Chi tiết đơn đặt phòng #{booking.BookingId}</h2>
 
       {/* Thông tin khách hàng */}
+      <h3 className="room-title">Thông tin khách hàng</h3>
       <div className="card">
-        <h3>Thông tin khách hàng</h3>
-        <p><strong>Khách hàng:</strong> {user.name}</p>
-        <p><strong>Số điện thoại:</strong> {user.phone}</p>
-        <p><strong>Tổng tiền:</strong> ${booking.total}</p>
+        
+        <p><strong>Họ và tên:</strong> {user.FullName}</p>
+        <p><strong>Email:</strong> {user.Email}</p>
+        <p><strong>Số điện thoại:</strong> {user.Phone}</p>
+        
       </div>
 
       {/* Danh sách phòng */}
-      <h3 className="room-title">Danh sách phòng</h3>
+      <h3 className="room-title">Thông tin phòng</h3>
       <div className="table-container">
         <table className="styled-table">
           <thead>
@@ -69,21 +71,32 @@ function BookingDetails() {
               <th>Loại phòng</th>
               <th>Ngày nhận</th>
               <th>Ngày trả</th>
+              <th>Số đêm</th>
               <th>Giá</th>
             </tr>
           </thead>
           <tbody>
             {booking.rooms.map((room, index) => (
               <tr key={index}>
-                <td>{room.roomType}</td>
-                <td>{room.checkIn}</td>
-                <td>{room.checkOut}</td>
-                <td>${room.price}</td>
+                <td>{room.RoomType}</td>
+                <td>{room.CheckInDate}</td>
+                <td>{room.CheckOutDate}</td>
+                <td>{calculateNights(room.CheckInDate, room.CheckOutDate)}</td>
+                <td>${room.Price}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      {/* Nút quay lại */}
+      <button 
+        className="btn-back" 
+        onClick={() => navigate(-1)} 
+        style={{ position: "absolute", right: "20px", bottom: "20px" }}
+      >
+        Quay lại
+      </button>
     </div>
   );
 }
