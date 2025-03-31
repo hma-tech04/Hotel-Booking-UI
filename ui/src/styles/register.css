@@ -1,0 +1,135 @@
+/* register.css */
+{
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  
+  body, html {
+    height: 100%;
+    font-family: 'Roboto', sans-serif;
+  }
+/* Container chính bọc toàn bộ trang */
+.page-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Đảm bảo trang chiếm toàn bộ chiều cao màn hình */
+    background-image: url('../images/home1.jpg'); /* Đường dẫn đến hình nền */
+    background-size: cover; /* Hình nền phủ toàn bộ trang */
+    background-position: center; /* Căn giữa hình nền */
+    background-repeat: no-repeat; /* Không lặp lại hình nền */
+  }
+  
+ 
+  
+  /* Phần giữa: Form đăng ký */
+  .register-container {
+    flex: 1; /* Chiếm toàn bộ không gian còn lại */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    background-color: transparent; /* Làm trong suốt để hình nền hiển thị */
+  }
+  
+  .register-card {
+    background-color: rgba(255, 255, 255, 0.9); /* Màu trắng với độ mờ để làm nổi bật form */
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Bóng nhẹ để tạo chiều sâu */
+    max-width: 400px; /* Giới hạn chiều rộng để dễ đọc */
+    width: 100%;
+    text-align: center;
+  }
+  
+  .register-title {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #333;
+  }
+  
+  .register-subtitle {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 20px;
+  }
+  
+  .error-message {
+    color: #e74c3c; /* Màu đỏ cho thông báo lỗi */
+    font-size: 14px;
+    margin-bottom: 15px;
+  }
+  
+  .register-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* Khoảng cách giữa các phần tử trong form */
+  }
+  
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+  }
+  
+  .form-group label {
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 5px;
+    color: #555;
+  }
+  
+  .register-form input {
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    outline: none;
+    transition: border-color 0.3s ease;
+  }
+  
+  .register-form input:focus {
+    border-color: #007bff; /* Đổi màu viền khi focus */
+  }
+  
+  .register-button {
+    padding: 12px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .register-button:hover {
+    background-color: #0056b3; /* Màu đậm hơn khi hover */
+  }
+  
+  .google-login-button {
+    padding: 12px;
+    background-color: #4285f4; /* Màu xanh của Google */
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .google-login-button:hover {
+    background-color: #3267d6; /* Màu đậm hơn khi hover */
+  }
+  
+  /* Phần dưới cùng: Footer */
+  .footer {
+    background-color: transparent; /* Làm trong suốt để hình nền hiển thị */
+    color: #fff;
+    padding: 15px;
+    text-align: center;
+  }
