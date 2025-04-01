@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom'; // Import useNavigate to redirect after login/logout
 import '../styles/style.css';
 
@@ -6,6 +6,15 @@ function Header() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false); // Track dropdown menu state
   const [isLoggedIn, setIsLoggedIn] = useState(false);  // Track login status
   const navigate = useNavigate(); // Hook for navigation after logout
+
+  // Check if user is logged in from localStorage
+  useEffect(() => {
+    if (localStorage.getItem('userToken')) {
+      setIsLoggedIn(true);
+    } else {
+      setIsLoggedIn(false);
+    }
+  }, []); // Only run once when component mounts
 
   // Toggle the dropdown menu when button is clicked
   const toggleDropdown = () => {
@@ -15,7 +24,7 @@ function Header() {
   // Handle logout and clear the user token
   const handleLogout = () => {
     setIsLoggedIn(false);  // Logout user
-    localStorage.removeItem('userToken');  // Example of clearing token (if you're using it for authentication)
+    localStorage.removeItem('userToken');  // Clear the token (if you're using it for authentication)
     navigate('/'); // Redirect to Home after logout
   };
 
@@ -32,7 +41,6 @@ function Header() {
           <ul className="nav-menu">
             <li><Link to="/" className="nav-link">Home</Link></li>
             <li><Link to="/rooms" className="nav-link">Rooms</Link></li>
-            <li><Link to="/booking-management" className='nav-link'>Book</Link></li>
           </ul>
 
           {/* Dropdown Menu for other links (Login, Register, Booking Management) */}
@@ -42,7 +50,14 @@ function Header() {
             onMouseLeave={() => setIsDropdownOpen(false)} // Close dropdown when mouse leaves
           >
             <button className="dropdown-toggle">
-              {isLoggedIn ? 'Account' : 'More'} {/* Show Account when logged in */}
+              {/* Thay "More" bằng Icon Người Dùng khi đã đăng nhập */}
+              {isLoggedIn ? (
+                <span className="user-icon">
+                  <i className="fa fa-user"></i> {/* Icon người dùng */}
+                </span>
+              ) : (
+                'More'
+              )}
             </button>
 
             {isDropdownOpen && (

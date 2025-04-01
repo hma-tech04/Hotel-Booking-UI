@@ -29,7 +29,7 @@ a {
 /* Header styling - giảm chiều cao navbar */
 header {
   height: 15vh;  /* Giảm chiều cao navbar */
-  background-color: #205781;  /* Màu nền của navbar */
+  background-color: #3e60f8;  /* Màu nền của navbar */
 }
 
 .logo img {
@@ -599,13 +599,12 @@ input:focus {
 
 /*--------------map--------*/
 /*--------------footer--------*/
-
 footer h3 {
-  margin-bottom: 20px;
+  margin-bottom: 5px;
 }
 
 footer li {
-  margin-bottom: 15px;
+  margin-bottom: 10px;
   transition: 0.5s;
 }
 

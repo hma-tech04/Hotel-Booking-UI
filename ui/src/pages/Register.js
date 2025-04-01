@@ -1,31 +1,65 @@
 import React, { useState } from "react";
+import { useNavigate } from 'react-router-dom'; // Import useNavigate từ React Router
 import "../styles/register.css"; // Import file CSS mới
 import Footer from "../components/Footer";
+import axios from 'axios';
 
 function Register() {
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState(""); // Sửa ở đây
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [error, setError] = useState("");
+  const [FullName, setFullName] = useState("");
+  const [Email, setEmail] = useState("");
+  const [PasswordHash, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState(""); // Sửa lỗi
+  const navigate = useNavigate();  // Khai báo useNavigate để điều hướng
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (password !== confirmPassword) {
+
+    // Kiểm tra mật khẩu và xác nhận mật khẩu có khớp không
+    if (PasswordHash !== confirmPassword) {
       setError("❌ Mật khẩu không khớp!");
       return;
     }
+
     setError(""); // Xóa lỗi nếu có
 
-    console.log("Đăng ký:", {
-      fullName,
-      email,
-      password,
-      phoneNumber,
-    });
+    // Dữ liệu người dùng (bao gồm fullName, email và password)
+    const userData = {
+      FullName,
+      Email,
+      PasswordHash,
+    };
 
-    // Gửi request API đăng ký ở đây...
+    try {
+      // Gửi request API đăng ký với axios
+      const response = await axios.post('http://localhost:5053/api/auth/register', userData, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      // Kiểm tra nếu đăng ký thành công (API trả về code 200)
+      if (response.status === 200 && response.data.code === 200) {
+        alert("Đăng ký thành công!");
+        // Điều hướng đến trang Login sau khi đăng ký thành công
+        navigate('/login');  // Điều hướng đến trang Login
+      } else {
+        // Nếu API trả về lỗi, hiển thị thông báo lỗi
+        setError(response.data.message || "Đăng ký thất bại");
+      }
+    } catch (error) {
+      // Xử lý lỗi khi gọi API
+      if (error.response) {
+        console.error("Error response:", error.response);
+        setError("❌ Đã xảy ra lỗi từ phía máy chủ, vui lòng thử lại.");
+      } else if (error.request) {
+        console.error("Error request:", error.request);
+        setError("❌ Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại.");
+      } else {
+        console.error("General Error:", error.message);
+        setError("❌ Đã xảy ra lỗi không xác định.");
+      }
+    }
   };
 
   return (
@@ -38,45 +72,34 @@ function Register() {
 
           <form className="register-form" onSubmit={handleSubmit}>
             <div className="form-group">
-              <label htmlFor="fullName">Họ và Tên</label>
+              <label htmlFor="FullName">Họ và Tên</label>
               <input
                 type="text"
-                id="fullName"
+                id="FullName"
                 placeholder="Họ và Tên"
-                value={fullName}
+                value={FullName}
                 onChange={(e) => setFullName(e.target.value)}
                 required
               />
             </div>
             <div className="form-group">
-              <label htmlFor="email">Email</label>
+              <label htmlFor="Email">Email</label>
               <input
                 type="email"
-                id="email"
+                id="Email"
                 placeholder="Email"
-                value={email}
+                value={Email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
             <div className="form-group">
-              <label htmlFor="phoneNumber">Số điện thoại</label>
-              <input
-                type="text"
-                id="phoneNumber"
-                placeholder="Số điện thoại"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="password">Mật khẩu</label>
+              <label htmlFor="PasswordHash">Mật khẩu</label>
               <input
                 type="password"
-                id="password"
+                id="PasswordHash"
                 placeholder="Mật khẩu"
-                value={password}
+                value={PasswordHash}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
@@ -88,7 +111,7 @@ function Register() {
                 id="confirmPassword"
                 placeholder="Xác nhận mật khẩu"
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)} // Sửa ở đây
+                onChange={(e) => setConfirmPassword(e.target.value)}
                 required
               />
             </div>

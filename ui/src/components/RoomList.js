@@ -1,47 +1,21 @@
-// src/components/RoomList.js
 import React, { useState, useEffect } from 'react';
-import RoomCard from './RoomCard'; // Card cho từng phòng
+import RoomCard from './RoomCard';
+import roomsData from '../roomsData'; // Import dữ liệu mock từ roomsData.js
 import '../styles/style.css';
 
-// Giả sử dữ liệu phòng được lấy từ API hoặc dữ liệu mẫu
-const roomsData = [
-  {
-    RoomId: 1,
-    RoomType: 'Superior Single Room',
-    Price: 129.00,
-    Description: 'A comfortable single room with a great view.',
-    ThumbnailUrl: '/images/r1.jpg',
-    IsAvailable: true,
-    RoomImages: ['/images/r1.jpg', '/images/r1-1.jpg', '/images/r1-2.jpg']
-  },
-  {
-    RoomId: 2,
-    RoomType: 'Deluxe Double Room',
-    Price: 199.00,
-    Description: 'A spacious room perfect for couples.',
-    ThumbnailUrl: '/images/r2.jpg',
-    IsAvailable: false,
-    RoomImages: ['/images/r2.jpg', '/images/r2-1.jpg', '/images/r2-2.jpg']
-  },
-  {
-    RoomId: 3,
-    RoomType: 'Executive Suite',
-    Price: 299.00,
-    Description: 'Luxurious suite with premium amenities.',
-    ThumbnailUrl: '/images/r3.jpg',
-    IsAvailable: true,
-    RoomImages: ['/images/r3.jpg', '/images/r3-1.jpg', '/images/r3-2.jpg']
-  },
-  // Bạn có thể thêm nhiều phòng khác ở đây
-];
-
 function RoomList() {
-  const [rooms, setRooms] = useState([]);
+  const [rooms, setRooms] = useState(roomsData); // Trạng thái lưu trữ phòng, khởi tạo từ roomsData
+  const [loading, setLoading] = useState(false); // Trạng thái loading, dù không cần thiết nhưng vẫn giữ để dễ quản lý
 
   useEffect(() => {
-    // Đây là nơi bạn có thể gọi API để lấy danh sách phòng thực tế
-    setRooms(roomsData);
-  }, []);
+    // Giả sử bạn có thể thực hiện các hành động khác trong useEffect nếu cần
+    // Nhưng ở đây bạn chỉ cần lấy dữ liệu từ roomsData trực tiếp
+    setLoading(true);
+    setRooms(roomsData); // Dữ liệu phòng được lấy trực tiếp từ roomsData.js
+    setLoading(false);
+  }, []); // Chạy khi component được render lần đầu
+
+  if (loading) return <div>Loading rooms...</div>;
 
   return (
     <section className="room top" id="room">
@@ -53,9 +27,13 @@ function RoomList() {
           </div>
         </div>
         <div className="content grid">
-          {rooms.map((room) => (
-            <RoomCard key={room.RoomId} room={room} />
-          ))}
+          {rooms.length > 0 ? (
+            rooms.map((room) => (
+              <RoomCard key={room.RoomId} room={room} />
+            ))
+          ) : (
+            <div>No rooms available.</div> 
+          )}
         </div>
       </div>
     </section>

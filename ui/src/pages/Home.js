@@ -1,21 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import BookingSearch from '../components/BookingSearch';
-import RoomList from '../components/RoomList';
-import RestaurantAccordion from '../components/RestaurantAccordion';
+import RoomList from '../components/RoomList';  // Import RoomList
 import Footer from '../components/Footer';
 import '../styles/style.css';
 
 function Home() {
-  // Slider state
+  // State quản lý slide hình ảnh
   const [currentSlide, setCurrentSlide] = useState("/images/home1.jpg");
+
+  // State kiểm tra người dùng đã đăng nhập hay chưa
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Kiểm tra đăng nhập khi component được mount
+  useEffect(() => {
+    // Kiểm tra nếu token đăng nhập có trong localStorage
+    if (localStorage.getItem('userToken')) {
+      setIsLoggedIn(true);  // Người dùng đã đăng nhập
+    } else {
+      setIsLoggedIn(false); // Người dùng chưa đăng nhập
+    }
+  }, []); // Chạy khi component lần đầu tiên được render
 
   const handleSlideClick = (src) => setCurrentSlide(src);
 
   return (
     <>
-      {/* Không cần Header ở đây, sẽ được xử lý ở App.js */}
-
-      {/* Banner */}
+      {/* Banner Section */}
       <section className="home" id="home">
         <div className="head_container">
           <div className="box">
@@ -30,54 +40,22 @@ function Home() {
             <img src={currentSlide} alt="Sochi Hotel" className="slide" />
           </div>
           <div className="image_item">
-            <img 
-              src="/images/home1.jpg" 
-              alt="Slide 1" 
-              className={`slide ${currentSlide === "/images/home1.jpg" ? "active" : ""}`} 
-              onClick={() => handleSlideClick("/images/home1.jpg")} 
-            />
-            <img 
-              src="/images/home2.jpg" 
-              alt="Slide 2" 
-              className={`slide ${currentSlide === "/images/home2.jpg" ? "active" : ""}`} 
-              onClick={() => handleSlideClick("/images/home2.jpg")} 
-            />
-            <img 
-              src="/images/home3.jpg" 
-              alt="Slide 3" 
-              className={`slide ${currentSlide === "/images/home3.jpg" ? "active" : ""}`} 
-              onClick={() => handleSlideClick("/images/home3.jpg")} 
-            />
-            <img 
-              src="/images/home4.jpg" 
-              alt="Slide 4" 
-              className={`slide ${currentSlide === "/images/home4.jpg" ? "active" : ""}`} 
-              onClick={() => handleSlideClick("/images/home4.jpg")} 
-            />
+            {['/images/home1.jpg', '/images/home2.jpg', '/images/home3.jpg', '/images/home4.jpg'].map((imageSrc, index) => (
+              <img
+                key={index}
+                src={imageSrc}
+                alt={`Slide ${index + 1}`}
+                className={`slide ${currentSlide === imageSrc ? 'active' : ''}`}
+                onClick={() => handleSlideClick(imageSrc)}
+              />
+            ))}
           </div>
         </div>
       </section>
 
-      <BookingSearch />
+          <BookingSearch />  {/* Tìm kiếm phòng chỉ hiển thị khi người dùng đăng nhập */}
 
-      {/* Restaurant Section with Accordion */}
-      <section className="restaurant top" id="restaurant">
-        <div className="container flex">
-          <div className="left">
-            <img src="/images/re.jpg" alt="Nhà hàng" />
-          </div>
-          <div className="right">
-            <div className="text">
-              <h2>Nhà Hàng của chúng tôi</h2>
-              <p>
-                Hãy tận hưởng một trải nghiệm ẩm thực tuyệt vời tại nhà hàng của chúng tôi, với một thực đơn phong phú bao gồm các món ăn quốc tế và Việt Nam. Dù bạn muốn thưởng thức bữa sáng đầy đủ năng lượng hay bữa tối lãng mạn, chúng tôi luôn có những món ăn phù hợp với mọi khẩu vị.
-              </p>
-            </div>
-            <RestaurantAccordion />
-          </div>
-        </div>
-      </section>
-
+      <RoomList /> 
       <Footer />
     </>
   );

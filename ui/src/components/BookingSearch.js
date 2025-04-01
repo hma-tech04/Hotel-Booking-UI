@@ -24,6 +24,7 @@ function BookingSearch() {
     // Ideally, you would call an API to search for rooms based on formData
     console.log('Booking Search Submitted:', formData);
     // Example: You can pass formData to an API or handle it accordingly
+    console.log('Booking Search Submitted:', formData);
   };
 
   return (
@@ -55,7 +56,10 @@ function BookingSearch() {
           <div className="box">
             <label>Adults:</label>
             <input
-              type="number"
+              type="number"/>
+            <label>Room Type:</label>
+            <input
+              type="Roomtype"
               name="adults"
               value={formData.adults}
               onChange={handleChange}
@@ -64,11 +68,11 @@ function BookingSearch() {
             />
           </div>
           <div className="box">
-            <label>Children:</label>
+            <label>Sort prices:</label>
             <input
               type="number"
-              name="children"
-              value={formData.children}
+              name="Prices"
+              value={formData.Prices}
               onChange={handleChange}
               placeholder="0"
               required

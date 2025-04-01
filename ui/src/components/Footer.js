@@ -18,15 +18,6 @@ function Footer() {
           </div>
         </div>
         <div className="box">
-          <h3>Tin Tức Mới</h3>
-          <ul>
-            <li>Khám phá các tour du lịch đảo bí mật chỉ dành riêng cho bạn</li>
-            <li>Trải nghiệm thư giãn tại các khu nghỉ dưỡng tự nhiên của chúng tôi</li>
-            <li>Tháng 9 tại Sochi Hotel</li>
-            <li>Chương trình âm nhạc trực tiếp tại Sochi</li>
-          </ul>
-        </div>
-        <div className="box">
           <h3>Dành cho khách hàng</h3>
           <ul>
             <li>Về Sochi Hotel</li>
