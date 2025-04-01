@@ -31,9 +31,21 @@ function BookingPage() {
   const [paymentMethod, setPaymentMethod] = useState("credit-card");
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+  
+    if (name === "Phone") {
+      // Chỉ cho phép nhập số và kiểm tra độ dài
+      const numericValue = value.replace(/\D/g, ""); // Loại bỏ ký tự không phải số
+      if (numericValue.length <= 10) {
+        setFormData({ ...formData, [name]: numericValue });
+      }
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
-
+  
+  
+  
   const calculateNights = (checkIn, checkOut) => {
     const startDate = new Date(checkIn);
     const endDate = new Date(checkOut);
@@ -48,7 +60,11 @@ function BookingPage() {
       alert("Vui lòng nhập đầy đủ thông tin khách hàng và ngày nhận/trả phòng!");
       return;
     }
-    alert(`Thanh toán thành công! \nTổng tiền: $${totalAmount.toFixed(2)}`);
+    if (formData.Phone.length !== 10) {
+      alert("Vui lòng nhập số điện thoại hợp lệ!");
+      return;
+    }
+    alert(`Thanh toán thành công! \nTổng tiền: ${totalAmount.toFixed(2)}vnđ`);
     navigate("/");
   };
 
@@ -61,7 +77,7 @@ function BookingPage() {
           {HotelBookingContext.rooms.map((room) => (
             <div key={room.RoomId} className="room-detail-card">
               <div className="room-image">
-                <img src={room.ImageUrl} alt={room.RoomType} onError={(e) => { e.target.onerror = null; e.target.src = "src/images/placeholder-room.jpg"; }} />
+                <img src={room.ImageUrl} alt={room.RoomType} onError={(e) => { e.target.onerror = null; e.target.src = "/images/placeholder-room.jpg"; }} />
               </div>
               <div className="room-details-list">
                 <div className="room-detail-row">
@@ -70,7 +86,7 @@ function BookingPage() {
                 </div>
                 <div className="room-detail-row">
                   <span className="detail-label">Giá / Đêm</span>
-                  <span className="detail-value price">${room.Price.toFixed(2)}</span>
+                  <span className="detail-value price">{room.Price.toFixed(2)}vnđ</span>
                 </div>
               </div>
               <button className="btn room-detail-btn">Xem chi tiết</button>
@@ -80,7 +96,7 @@ function BookingPage() {
 
         <div className="booking-right-column">
           <h3>Thông tin khách hàng</h3>
-          <input type="text" name="Phone" placeholder="Số điện thoại" value={formData.Phone} onChange={handleChange} required />
+          <input type="text" name="Phone" placeholder="Số điện thoại" value={formData.Phone} onChange={handleChange} required maxLength={10}/>
 
           <div className="date-selection">
             <div className="box">
@@ -95,7 +111,7 @@ function BookingPage() {
 
           <h3>Thông tin thanh toán</h3>
           <p><strong>Số đêm: </strong><span className="nights-count">{nights}</span></p>
-          <p><strong>Tổng tiền: </strong><span className="total-price">${totalAmount.toFixed(2)}</span></p>
+          <p><strong>Tổng tiền: </strong><span className="total-price">{totalAmount.toFixed(2)}vnđ</span></p>
 
           <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)}>
             <option value="momo">VNPay</option>

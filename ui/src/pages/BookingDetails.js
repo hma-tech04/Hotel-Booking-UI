@@ -82,7 +82,7 @@ function BookingDetails() {
                 <td>{room.CheckInDate}</td>
                 <td>{room.CheckOutDate}</td>
                 <td>{calculateNights(room.CheckInDate, room.CheckOutDate)}</td>
-                <td>${room.Price}</td>
+                <td>{room.Price}vnđ</td>
               </tr>
             ))}
           </tbody>
