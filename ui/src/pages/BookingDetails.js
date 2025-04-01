@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import "../styles/booking.css";
+import "../styles/booking-detail.css";
 
 function BookingDetails() {
   const { bookingId } = useParams();
@@ -49,51 +49,42 @@ function BookingDetails() {
   if (!booking || !user) return <p className="error-message">Đơn đặt phòng không tồn tại.</p>;
 
   return (
-    <div>
+    <div className="booking-details">
       <h2 className="title">Chi tiết đơn đặt phòng #{booking.BookingId}</h2>
-
-      {/* Thông tin khách hàng */}
-      <h3 className="room-title">Thông tin khách hàng</h3>
-      <div className="card">
-        
-        <p><strong>Họ và tên:</strong> {user.FullName}</p>
-        <p><strong>Email:</strong> {user.Email}</p>
-        <p><strong>Số điện thoại:</strong> {user.Phone}</p>
-        
-      </div>
-
-      {/* Danh sách phòng */}
-      <h3 className="room-title">Thông tin phòng</h3>
-      <div className="table-container">
-        <table className="styled-table">
-          <thead>
-            <tr>
-              <th>Loại phòng</th>
-              <th>Ngày nhận</th>
-              <th>Ngày trả</th>
-              <th>Số đêm</th>
-              <th>Giá</th>
-            </tr>
-          </thead>
-          <tbody>
-            {booking.rooms.map((room, index) => (
-              <tr key={index}>
-                <td>{room.RoomType}</td>
-                <td>{room.CheckInDate}</td>
-                <td>{room.CheckOutDate}</td>
-                <td>{calculateNights(room.CheckInDate, room.CheckOutDate)}</td>
-                <td>{room.Price}vnđ</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
+      
+      {booking.rooms.map((room, index) => (
+        <div key={index} className="room-card">
+          <div className="room-header">
+            <h4>{room.RoomType}</h4>
+          </div>
+          <div className="room-details">
+            <div className="detail-item">
+              <span className="label">Ngày nhận phòng:</span>
+              <span className="value">{room.CheckInDate}</span>
+            </div>
+            <div className="detail-item">
+              <span className="label">Ngày trả phòng:</span>
+              <span className="value">{room.CheckOutDate}</span>
+            </div>
+            <div className="detail-item">
+              <span className="label">Số đêm:</span>
+              <span className="value">{calculateNights(room.CheckInDate, room.CheckOutDate)}</span>
+            </div>
+            <div className="detail-item price">
+              <span className="label">Giá phòng:</span>
+              <span className="value">{room.Price}vnđ</span>
+            </div>
+            <div className="total-price">
+              <span className="label">Tổng tiền:</span>
+              <span className="value">{booking.TotalPrice}vnđ</span>
+            </div>
+          </div>
+        </div>
+      ))}
       {/* Nút quay lại */}
       <button 
         className="btn-back" 
         onClick={() => navigate(-1)} 
-        style={{ position: "absolute", right: "20px", bottom: "20px" }}
       >
         Quay lại
       </button>

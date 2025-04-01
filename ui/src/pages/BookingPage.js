@@ -70,7 +70,7 @@ function BookingPage() {
 
   return (
     <div>
-      <h2>Xác nhận đặt phòng</h2>
+      <h2 className="titles">Xác nhận đặt phòng</h2>
       <div className="booking-content">
         <div className="booking-left-column">
           <h3>Phòng đã chọn</h3>
@@ -86,7 +86,7 @@ function BookingPage() {
                 </div>
                 <div className="room-detail-row">
                   <span className="detail-label">Giá / Đêm</span>
-                  <span className="detail-value price">{room.Price.toFixed(2)}vnđ</span>
+                  <span className="detail-value prices">{room.Price.toFixed(2)}vnđ</span>
                 </div>
               </div>
               <button className="btn room-detail-btn">Xem chi tiết</button>
@@ -95,30 +95,36 @@ function BookingPage() {
         </div>
 
         <div className="booking-right-column">
-          <h3>Thông tin khách hàng</h3>
-          <input type="text" name="Phone" placeholder="Số điện thoại" value={formData.Phone} onChange={handleChange} required maxLength={10}/>
+          <div className="customer-section">
+            <h3>Thông tin khách hàng</h3>
 
-          <div className="date-selection">
-            <div className="box">
-              <label>Check-in:</label>
-              <input type="date" name="CheckInDate" value={formData.CheckInDate} onChange={handleChange} required />
-            </div>
-            <div className="box">
-              <label>Check-out:</label>
-              <input type="date" name="CheckOutDate" value={formData.CheckOutDate} onChange={handleChange} required />
+            <input type="text" name="Phone" placeholder="Số điện thoại" value={formData.Phone} onChange={handleChange} required maxLength={10}/>
+
+            <div className="date-selection">
+              <div className="box">
+                <label>Check-in:</label>
+                <input type="date" name="CheckInDate" value={formData.CheckInDate} onChange={handleChange} required />
+              </div>
+              <div className="box">
+                <label>Check-out:</label>
+                <input type="date" name="CheckOutDate" value={formData.CheckOutDate} onChange={handleChange} required />
+              </div>
             </div>
           </div>
 
-          <h3>Thông tin thanh toán</h3>
-          <p><strong>Số đêm: </strong><span className="nights-count">{nights}</span></p>
-          <p><strong>Tổng tiền: </strong><span className="total-price">{totalAmount.toFixed(2)}vnđ</span></p>
+          <div className="payment-section">
+            <h3>Thông tin thanh toán</h3>
 
-          <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)}>
-            <option value="momo">VNPay</option>
-            <option value="credit-card">Thẻ tín dụng</option>
-            <option value="bank-transfer">Chuyển khoản ngân hàng</option>
-          </select>
-          <button className="btn pay-btn" onClick={handlePayment}>Thanh toán</button>
+            <p><strong>Số đêm: </strong><span className="nights-count">{nights}</span></p>
+            <p><strong>Tổng tiền: </strong><span className="total-prices">{totalAmount.toFixed(2)}vnđ</span></p>
+
+            <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)}>
+              <option value="momo">VNPay</option>
+              <option value="credit-card">Thẻ tín dụng</option>
+              <option value="bank-transfer">Chuyển khoản ngân hàng</option>
+            </select>
+            <button className="btn pay-btn" onClick={handlePayment}>Thanh toán</button>
+          </div>
         </div>
       </div>
     </div>

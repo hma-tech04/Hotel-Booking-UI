@@ -13,7 +13,7 @@ body{
 }
 
 /* Tiêu đề */
-.title {
+.titles {
   text-align: center;
   color: #211C84;
   font-size: 36px;
@@ -44,12 +44,6 @@ body{
 .booking-table th {
   background-color: #4D55CC;
   color: white;
-}
-
-/* Giá tiền */
-.price {
-  font-weight: bold;
-  color: #3f9cc1;
 }
 
 /* Các nút hành động */
