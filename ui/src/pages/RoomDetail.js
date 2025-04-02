@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom'; // Để lấy ID từ URL
 import roomsData from '../roomsData'; // Import dữ liệu mock từ roomsData.js
 import '../styles/style.css'; // Đảm bảo bạn có CSS đẹp\
 import Footer from '../components/Footer'; // Import Footer
-import '../styles/RoomDetail.css'; 
+import '../styles/RoomDetail.css';
 
 function RoomDetail() {
   const { roomId } = useParams();  // Lấy roomId từ URL

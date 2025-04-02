@@ -31,8 +31,8 @@ function App() {
           <Route path="/rooms" element={<RoomList />} />
           <Route path="/room/:roomId" element={<RoomDetail />} />
           <Route path="/booking-management" element={<BookingManagement />} />
-              <Route path="/booking-details/:bookingId" element={<BookingDetails />} /> {/* Route để xem chi tiết đơn đặt phòng */}
-              <Route path="/booking-page/:roomId" element={<BookingPage />} /> {/* Route để đặt phòng */}
+          <Route path="/booking-details/:bookingId" element={<BookingDetails />} /> {/* Route để xem chi tiết đơn đặt phòng */}
+          <Route path="/booking-page/:roomId" element={<BookingPage />} /> {/* Route để đặt phòng */}
                     {/* Nếu là Admin thì hiển thị các trang Admin */}
           {isAdmin && (
             <>

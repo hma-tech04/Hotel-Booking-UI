@@ -16,14 +16,6 @@ function BookingManagement() {
         rooms: [
           { RoomType: "Superior Single Room", CheckInDate: "2023-04-01", CheckOutDate: "2023-04-05", Price: 200 }
         ],
-      },
-      {
-        BookingId: 2,
-        UserId: 1,
-        TotalPrice: 3750,
-        rooms: [
-          { RoomType: "Luxury Suite", CheckInDate: "2023-05-10", CheckOutDate: "2023-05-15", Price: 750 }
-        ],
       }
     ]);
 
@@ -32,9 +24,9 @@ function BookingManagement() {
     ]);
   }, []);
 
-  const calculateNights = (checkIn, checkOut) => {
-    const start = new Date(checkIn);
-    const end = new Date(checkOut);
+  const calculateNights = (CheckInDate, CheckOutDate) => {
+    const start = new Date(CheckInDate);
+    const end = new Date(CheckOutDate);
     return Math.ceil((end - start) / (1000 * 60 * 60 * 24));
   };
 
@@ -54,7 +46,6 @@ function BookingManagement() {
           </thead>
           <tbody>
             {bookings.map((booking, index) => {
-              const user = users.find((u) => u.UserId === booking.UserId);
               return booking.rooms.map((room, roomIndex) => (
                 <tr key={`${booking.BookingId}-${roomIndex}`}>
                   {roomIndex === 0 && <td rowSpan={booking.rooms.length}>{index + 1}</td>}

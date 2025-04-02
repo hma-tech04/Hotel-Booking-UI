@@ -9,7 +9,6 @@ function BookingDetails() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    // Dữ liệu giả lập
     const bookingsData = [
       {
         BookingId: 1,
@@ -17,14 +16,6 @@ function BookingDetails() {
         TotalPrice: 500,
         rooms: [
           { RoomType: "Superior Single Room", CheckInDate: "2023-04-01", CheckOutDate: "2023-04-05", Price: 200 }
-        ],
-      },
-      {
-        BookingId: 2,
-        UserId: 1,
-        TotalPrice: 750,
-        rooms: [
-          { RoomType: "Luxury Suite", CheckInDate: "2023-05-10", CheckOutDate: "2023-05-15", Price: 750 }
         ],
       }
     ];

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/booking-page.css";
+import { Link } from "react-router-dom";
 
 function BookingPage() {
   const navigate = useNavigate();
@@ -21,7 +22,7 @@ function BookingPage() {
       },
     ],
   };
-
+  
   const [formData, setFormData] = useState({
     ...HotelBookingContext.customer,
     CheckInDate: "",
@@ -43,8 +44,6 @@ function BookingPage() {
       setFormData({ ...formData, [name]: value });
     }
   };
-  
-  
   
   const calculateNights = (checkIn, checkOut) => {
     const startDate = new Date(checkIn);
@@ -89,7 +88,7 @@ function BookingPage() {
                   <span className="detail-value prices">{room.Price.toFixed(2)}vnđ</span>
                 </div>
               </div>
-              <button className="btn room-detail-btn">Xem chi tiết</button>
+              <Link to={`/room-detail/${room.RoomId}`} className="btn room-detail-btn">Xem chi tiết</Link>
             </div>
           ))}
         </div>
