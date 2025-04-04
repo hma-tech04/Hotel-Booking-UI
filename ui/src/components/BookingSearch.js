@@ -21,9 +21,6 @@ function BookingSearch() {
   // Handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Ideally, you would call an API to search for rooms based on formData
-    console.log('Booking Search Submitted:', formData);
-    // Example: You can pass formData to an API or handle it accordingly
     console.log('Booking Search Submitted:', formData);
   };
 
@@ -54,9 +51,6 @@ function BookingSearch() {
             />
           </div>
           <div className="box">
-            <label>Adults:</label>
-            <input
-              type="number"/>
             <label>Room Type:</label>
             <input
               type="Roomtype"

@@ -18,7 +18,7 @@ function BookingPage() {
         RoomId: 1,
         RoomType: "Superior Single Room",
         Price: 129.0,
-        ImageUrl: "/images/superior-single.jpg",
+        ImageUrl: "/images/r1.jpg",
       },
     ],
   };
@@ -88,7 +88,7 @@ function BookingPage() {
                   <span className="detail-value prices">{room.Price.toFixed(2)}vnđ</span>
                 </div>
               </div>
-              <Link to={`/room-detail/${room.RoomId}`} className="btn room-detail-btn">Xem chi tiết</Link>
+              <Link to={`/room/${room.RoomId}`} className="btn room-detail-btn">Xem chi tiết</Link>
             </div>
           ))}
         </div>
@@ -117,11 +117,7 @@ function BookingPage() {
             <p><strong>Số đêm: </strong><span className="nights-count">{nights}</span></p>
             <p><strong>Tổng tiền: </strong><span className="total-prices">{totalAmount.toFixed(2)}vnđ</span></p>
 
-            <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)}>
-              <option value="momo">VNPay</option>
-              <option value="credit-card">Thẻ tín dụng</option>
-              <option value="bank-transfer">Chuyển khoản ngân hàng</option>
-            </select>
+            
             <button className="btn pay-btn" onClick={handlePayment}>Thanh toán</button>
           </div>
         </div>

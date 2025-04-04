@@ -1,76 +1,128 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom'; // Import useNavigate to redirect after login/logout
+import { Link, useNavigate } from 'react-router-dom';
+import { jwtDecode } from 'jwt-decode';
 import '../styles/style.css';
 
-function Header() {
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false); // Track dropdown menu state
-  const [isLoggedIn, setIsLoggedIn] = useState(false);  // Track login status
-  const navigate = useNavigate(); // Hook for navigation after logout
+function Header({ isAdmin, updateAdminStatus }) {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const navigate = useNavigate();
 
-  // Check if user is logged in from localStorage
   useEffect(() => {
-    if (localStorage.getItem('userToken')) {
+    const token = localStorage.getItem('token');
+    console.log('Header useEffect: token=', token);
+    if (token) {
       setIsLoggedIn(true);
     } else {
       setIsLoggedIn(false);
     }
-  }, []); // Only run once when component mounts
+  }, []);
 
-  // Toggle the dropdown menu when button is clicked
   const toggleDropdown = () => {
-    setIsDropdownOpen(!isDropdownOpen);  // Toggle the dropdown state
+    setIsDropdownOpen(!isDropdownOpen);
   };
 
-  // Handle logout and clear the user token
   const handleLogout = () => {
-    setIsLoggedIn(false);  // Logout user
-    localStorage.removeItem('userToken');  // Clear the token (if you're using it for authentication)
-    navigate('/'); // Redirect to Home after logout
+    console.log('Header handleLogout: Logging out');
+    setIsLoggedIn(false);
+    localStorage.removeItem('token');
+    updateAdminStatus(null);
+    navigate('/');
   };
+
+  const handleAdminAccess = () => {
+    const token = localStorage.getItem('token');
+    console.log('Header handleAdminAccess: token=', token);
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+        console.log('Header handleAdminAccess: decoded=', decoded);
+        if (decoded.permissions === 'admin' || decoded.role === 'Admin') {
+          console.log('Header handleAdminAccess: Navigating to /admin');
+          navigate('/admin');
+        } else {
+          console.log('Header handleAdminAccess: No admin rights');
+          alert('Bạn không có quyền truy cập khu vực quản lý.');
+          navigate('/');
+        }
+      } catch (error) {
+        console.error('Header handleAdminAccess: Error decoding token:', error);
+        navigate('/login');
+      }
+    } else {
+      console.log('Header handleAdminAccess: No token, redirecting to /login');
+      navigate('/login');
+    }
+  };
+
+  console.log('Header render: isAdmin=', isAdmin, 'isLoggedIn=', isLoggedIn);
 
   return (
     <header className="header">
       <div className="container">
         <nav>
-          {/* Logo */}
           <Link to="/" className="logo">
             <img src="/images/logo.png" alt="Hotel Logo" />
           </Link>
-
-          {/* Navbar Links (Home and Rooms always visible) */}
           <ul className="nav-menu">
             <li><Link to="/" className="nav-link">Home</Link></li>
             <li><Link to="/rooms" className="nav-link">Rooms</Link></li>
+            {isAdmin && (
+              <li>
+                <button onClick={handleAdminAccess} className="nav-link" style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                  Quản lý
+                </button>
+              </li>
+            )}
           </ul>
-
-          {/* Dropdown Menu for other links (Login, Register, Booking Management) */}
           <div
             className="nav-link-dropdown"
-            onMouseEnter={() => setIsDropdownOpen(true)}  // Open dropdown when mouse enters
-            onMouseLeave={() => setIsDropdownOpen(false)} // Close dropdown when mouse leaves
+            onMouseEnter={() => setIsDropdownOpen(true)}
+            onMouseLeave={() => setIsDropdownOpen(false)}
           >
             <button className="dropdown-toggle">
-              {/* Thay "More" bằng Icon Người Dùng khi đã đăng nhập */}
-              {isLoggedIn ? (
-                <span className="user-icon">
-                  <i className="fa fa-user"></i> {/* Icon người dùng */}
-                </span>
-              ) : (
-                'More'
-              )}
+              <span className="user-icon">
+                <i className="fa fa-user"></i>
+              </span>
             </button>
-
             {isDropdownOpen && (
               <ul className="dropdown-menu">
                 {!isLoggedIn ? (
                   <>
-                    <li><Link to="/login" className="nav-link" onClick={() => setIsDropdownOpen(false)}>Login</Link></li>
-                    <li><Link to="/register" className="nav-link" onClick={() => setIsDropdownOpen(false)}>Register</Link></li>
+                    <li>
+                      <Link to="/login" className="nav-link" onClick={() => setIsDropdownOpen(false)}>
+                        Login
+                      </Link>
+                    </li>
+                    <li>
+                      <Link to="/register" className="nav-link" onClick={() => setIsDropdownOpen(false)}>
+                        Register
+                      </Link>
+                    </li>
                   </>
                 ) : (
                   <>
-                    <li><Link to="/booking-management" className="nav-link" onClick={() => setIsDropdownOpen(false)}>Booking Management</Link></li>
-                    <li><Link to="/" className="nav-link" onClick={() => { handleLogout(); setIsDropdownOpen(false); }}>Logout</Link></li>
+                    <li>
+                      <Link
+                        to="/booking-management"
+                        className="nav-link"
+                        onClick={() => setIsDropdownOpen(false)}
+                      >
+                        Booking Management
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/"
+                        className="nav-link"
+                        onClick={() => {
+                          handleLogout();
+                          setIsDropdownOpen(false);
+                        }}
+                      >
+                        Logout
+                      </Link>
+                    </li>
                   </>
                 )}
               </ul>

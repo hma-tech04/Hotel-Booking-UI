@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import BookingSearch from '../components/BookingSearch';
 import RoomList from '../components/RoomList';  // Import RoomList
-import Footer from '../components/Footer';
 import '../styles/style.css';
 
 function Home() {
@@ -11,7 +10,6 @@ function Home() {
   // State kiểm tra người dùng đã đăng nhập hay chưa
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  // Kiểm tra đăng nhập khi component được mount
   useEffect(() => {
     // Kiểm tra nếu token đăng nhập có trong localStorage
     if (localStorage.getItem('userToken')) {
@@ -53,10 +51,9 @@ function Home() {
         </div>
       </section>
 
-          <BookingSearch />  {/* Tìm kiếm phòng chỉ hiển thị khi người dùng đăng nhập */}
+          <BookingSearch />
 
       <RoomList /> 
-      <Footer />
     </>
   );
 }

@@ -1,33 +1,59 @@
-// roomsData.js
+import home1 from './images/home1.jpg';
+import home2 from './images/home2.jpg';
+import home3 from './images/home3.jpg';
+import home4 from './images/home4.jpg';
+import g1 from './images/g1.jpg';
+import g2 from './images/g2.jpg';
+import g3 from './images/g3.jpg';
+import g4 from './images/g4.jpg';
+import r1 from './images/r1.jpg';
+import r2 from './images/r2.jpg';
+import r3 from './images/r3.jpg';
+import w1 from './images/w1.jpg';
 
 const roomsData = [
   {
     RoomId: 1,
     RoomType: "Superior Single Room",
-    Price: 129.00,
-    Description: "Phòng đơn Superior mang đến sự thoải mái tối đa cho một người. Với không gian rộng rãi, phòng được trang bị đầy đủ tiện nghi hiện đại, bao gồm giường đơn thoải mái, bàn làm việc, tivi màn hình phẳng và Wi-Fi miễn phí. Cửa sổ lớn cho phép bạn tận hưởng không gian sáng sủa và tầm nhìn đẹp ra thành phố, rất phù hợp cho những ai tìm kiếm một nơi nghỉ ngơi yên tĩnh và tiện nghi sau một ngày dài làm việc.",
-    ThumbnailUrl: "/images/r1.jpg",
-    IsAvailable: true,
-    RoomImages: ["/images/r1.jpg", "/images/r1-1.jpg", "/images/r1-2.jpg"]
+    ThumbnailUrl: home1,
+    Images: [home1, home2, home3, home4],
+    Price: 129,
+    FullDescription:
+      "Phòng đơn Superior mang đến sự thoải mái tối đa cho một người. Với không gian rộng rãi, phòng được trang bị đầy đủ tiện nghi hiện đại, bao gồm giường đơn lớn, bàn làm việc, tivi màn hình phẳng và Wi-Fi miễn phí. Cửa sổ lớn cho phép bạn hướng nhìn không gian sáng sủa và ấm áp, rất phù hợp để nghỉ ngơi và làm việc sau một ngày dài.",
+    Area: 250,
+    BedType: "Single Bed",
+    MaxOccupancy: 1,
+    Amenities: ["Wi-Fi miễn phí", "Điều hòa", "Minibar", "TV màn hình phẳng"],
+    CancellationPolicy: "Chính sách hủy linh hoạt với thông báo trước 24 giờ",
   },
   {
     RoomId: 2,
     RoomType: "Deluxe Double Room",
-    Price: 199.00,
-    Description: "Phòng Deluxe Double mang lại không gian thoải mái cho hai người với giường đôi rộng rãi, không gian được trang trí tinh tế với nội thất cao cấp. Phòng có đầy đủ tiện nghi như tivi LCD, minibar, máy lạnh và Wi-Fi miễn phí. Các cửa sổ lớn giúp bạn có thể ngắm nhìn cảnh quan xung quanh, tạo cảm giác thư giãn tuyệt vời. Phòng cũng có khu vực làm việc riêng biệt và một không gian lý tưởng cho các cặp đôi hoặc gia đình nhỏ.",
-    ThumbnailUrl: "/images/r2.jpg",
-    IsAvailable: false,
-    RoomImages: ["/images/r2.jpg", "/images/r2-1.jpg", "/images/r2-2.jpg"]
+    ThumbnailUrl: g1,
+    Images: [g1, g2, g3, g4],
+    Price: 199,
+    FullDescription:
+      "Phòng Deluxe Double mang đến không gian sang trọng cho cặp đôi. Phòng được trang bị giường đôi lớn, khu vực tiếp khách, và ban công riêng với tầm nhìn tuyệt đẹp. Tiện nghi hiện đại bao gồm Wi-Fi miễn phí, điều hòa, và minibar.",
+    Area: 350,
+    BedType: "Double Bed",
+    MaxOccupancy: 2,
+    Amenities: ["Wi-Fi miễn phí", "Điều hòa", "Minibar", "Ban công"],
+    CancellationPolicy: "Hủy miễn phí trước 48 giờ",
   },
   {
     RoomId: 3,
-    RoomType: "Executive Suite",
-    Price: 299.00,
-    Description: "Phòng Executive Suite là lựa chọn hoàn hảo cho những ai muốn trải nghiệm sự sang trọng và tiện nghi đỉnh cao. Phòng được thiết kế rộng rãi với giường cỡ King, không gian sống tiện nghi, có phòng khách riêng biệt, bàn làm việc cao cấp và các thiết bị hiện đại. Phòng cũng có cửa sổ lớn với tầm nhìn tuyệt đẹp ra thành phố hoặc biển. Đặc biệt, các tiện nghi cao cấp như bồn tắm massage, minibar, máy pha cà phê, và dịch vụ phòng 24/7 sẽ giúp bạn có một kỳ nghỉ không thể quên.",
-    ThumbnailUrl: "/images/r3.jpg",
-    IsAvailable: true,
-    RoomImages: ["/images/r3.jpg", "/images/r3-1.jpg", "/images/r3-2.jpg"]
-  }
+    RoomType: "Suite Room",
+    ThumbnailUrl: r1,
+    Images: [r1, r2, r3, w1], // Thay r4.jpg bằng w1.jpg
+    Price: 299,
+    FullDescription:
+      "Phòng Suite là lựa chọn hoàn hảo cho những ai tìm kiếm sự xa hoa. Với phòng khách riêng, phòng ngủ chính, và phòng tắm rộng rãi có bồn tắm, phòng Suite mang đến trải nghiệm nghỉ dưỡng đẳng cấp. Tiện nghi bao gồm Wi-Fi miễn phí, TV màn hình phẳng, và dịch vụ phòng 24/7.",
+    Area: 500,
+    BedType: "King Bed",
+    MaxOccupancy: 3,
+    Amenities: ["Wi-Fi miễn phí", "TV màn hình phẳng", "Bồn tắm", "Dịch vụ phòng 24/7"],
+    CancellationPolicy: "Hủy miễn phí trước 72 giờ",
+  },
 ];
 
 export default roomsData;

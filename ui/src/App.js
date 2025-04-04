@@ -10,14 +10,12 @@ import RoomDetail from './pages/RoomDetail';
 import BookingManagement from './pages/BookingManagement';
 import BookingDetails from './pages/BookingDetails';
 import BookingPage from './pages/BookingPage';
-import Reports from './pages/Admin/Reports';
 import ForgotPassword from './pages/ForgotPassword';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 
 function App() {
   // Kiểm tra quyền Admin từ localStorage
   const user = JSON.parse(localStorage.getItem('user'));
-  const isAdmin = user && user.role === 'admin'; // Kiểm tra nếu user là admin
 
   return (
     <GoogleOAuthProvider clientId="403757915006-h5db3tft1bmon6g7tsopr02gculscv2d.apps.googleusercontent.com">
@@ -33,13 +31,7 @@ function App() {
           <Route path="/booking-management" element={<BookingManagement />} />
           <Route path="/booking-details/:bookingId" element={<BookingDetails />} /> {/* Route để xem chi tiết đơn đặt phòng */}
           <Route path="/booking-page/:roomId" element={<BookingPage />} /> {/* Route để đặt phòng */}
-                    {/* Nếu là Admin thì hiển thị các trang Admin */}
-          {isAdmin && (
-            <>
-              
-              <Route path="/admin/reports" element={<Reports />} />
-            </>
-          )}
+
           <Route path="/forgot-password" element={<ForgotPassword />} />
         </Routes>
       </div>

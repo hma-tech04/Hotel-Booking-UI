@@ -13,8 +13,11 @@ function RoomCard({ room }) {
         <p><span>${room.Price}</span> per night</p>
         <p>{room.Description}</p>
         <p>Status: {room.IsAvailable ? 'Available' : 'Not Available'}</p>
+        <Link to={`/booking-page/${room.RoomId}`}><button className="book-now-btn">Book Now</button></Link>
+        <Link to={`/room/${room.RoomId}`}><button className="book-now-btn">Show Detail</button></Link>
       </div>
     </div>
+
   );
 }
 

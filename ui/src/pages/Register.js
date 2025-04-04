@@ -63,63 +63,66 @@ function Register() {
   };
 
   return (
-    <div className="page-container">
-      <div className="register-container">
-        <div className="register-card">
-          <h2 className="register-title">Đăng ký</h2>
+    <div>
+      <div className="page-container">
+        <div className="register-container">
+          <div className="register-card">
+            <h2 className="register-title">Đăng ký</h2>
 
-          {error && <p className="error-message">{error}</p>}
+            {error && <p className="error-message">{error}</p>}
 
-          <form className="register-form" onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label htmlFor="FullName">Họ và Tên</label>
-              <input
-                type="text"
-                id="FullName"
-                placeholder="Họ và Tên"
-                value={FullName}
-                onChange={(e) => setFullName(e.target.value)}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="Email">Email</label>
-              <input
-                type="email"
-                id="Email"
-                placeholder="Email"
-                value={Email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="PasswordHash">Mật khẩu</label>
-              <input
-                type="password"
-                id="PasswordHash"
-                placeholder="Mật khẩu"
-                value={PasswordHash}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="confirmPassword">Xác nhận mật khẩu</label>
-              <input
-                type="password"
-                id="confirmPassword"
-                placeholder="Xác nhận mật khẩu"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-              />
-            </div>
-            <button type="submit" className="register-button">
-              Đăng ký
-            </button>
-          </form>
+            <form className="register-form" onSubmit={handleSubmit}>
+              <div className="form-group">
+                <label htmlFor="FullName">Họ và Tên</label>
+                <input
+                  type="text"
+                  id="FullName"
+                  placeholder="Họ và Tên"
+                  value={FullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="Email">Email</label>
+                <input
+                  type="email"
+                  id="Email"
+                  placeholder="Email"
+                  value={Email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="PasswordHash">Mật khẩu</label>
+                <input
+                  type="password"
+                  id="PasswordHash"
+                  placeholder="Mật khẩu"
+                  value={PasswordHash}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="confirmPassword">Xác nhận mật khẩu</label>
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  placeholder="Xác nhận mật khẩu"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                />
+              </div>
+              <button type="submit" className="register-button">
+                Đăng ký
+              </button>
+            </form>
+          </div>
         </div>
+        
       </div>
       <Footer />
     </div>
