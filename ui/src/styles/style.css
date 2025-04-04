@@ -818,3 +818,149 @@ footer li:hover {
 .book-now-btn:hover {
   background-color: #022a6f;
 }
+/* Style cho thanh tìm kiếm */
+.search-bar {
+  margin: 20px 0;
+  text-align: center;
+}
+
+.search-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 420px; /* Giảm 30% từ 600px: 600 * 0.7 = 420px */
+  margin: 0 auto;
+}
+
+.search-input {
+  width: 100%;
+  padding: 8px 15px;
+  font-size: 16px;
+  line-height: 1.5;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #fff;
+  outline: none;
+  height: 36px;
+  box-sizing: border-box;
+}
+
+.search-input:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+}
+
+/* Style cho placeholder */
+.search-input::placeholder {
+  color: #999; /* Màu chữ placeholder */
+  opacity: 1; /* Đảm bảo placeholder hiển thị rõ */
+}
+
+/* Đảm bảo tương thích với các trình duyệt khác */
+.search-input::-webkit-input-placeholder {
+  color: #999;
+}
+.search-input::-moz-placeholder {
+  color: #999;
+}
+.search-input:-ms-input-placeholder {
+  color: #999;
+}
+
+/* Đảm bảo container và grid vẫn hoạt động tốt */
+.container {
+  padding: 0 20px;
+}
+
+.content.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+/* src/styles/style.css */
+
+/* Dropdown menu styles */
+.nav-link-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 10px;
+}
+
+.user-icon {
+  font-size: 20px;
+  color: #333;
+}
+
+.dropdown-menu {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  min-width: 180px;
+  padding: 8px 0;
+  z-index: 1000;
+  list-style: none;
+}
+
+.dropdown-menu li {
+  padding: 0;
+}
+
+.nav-link {
+  display: block;
+  padding: 8px 15px;
+  color: #333;
+  text-decoration: none;
+  transition: background-color 0.2s;
+}
+
+.nav-link:hover {
+  background-color: #f5f5f5;
+}
+
+.greeting {
+  cursor: pointer;
+  font-weight: 500;
+}
+
+/* Profile dropdown styles */
+.profile-item {
+  position: relative;
+}
+
+.profile-dropdown {
+  position: absolute;
+  right: 100%; /* Đổi từ left: 100% sang right: 100% để mở sang trái */
+  top: 0;
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  padding: 10px;
+  min-width: 200px;
+  z-index: 1001;
+  list-style: none;
+  margin-right: 5px; /* Thêm khoảng cách giữa hai dropdown */
+}
+
+.profile-dropdown li {
+  padding: 5px 10px;
+  color: #666;
+  font-size: 14px;
+}
+
+.profile-dropdown .nav-link {
+  color: #1976d2;
+  padding: 5px 10px;
+}
+
+.profile-dropdown .nav-link:hover {
+  background-color: #e3f2fd;
+}

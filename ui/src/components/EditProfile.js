@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import '../styles/EditProfile.css';
+import backgroundImage from '../images/home1.jpg';
 
 function EditProfile() {
   const navigate = useNavigate();
@@ -79,7 +80,7 @@ function EditProfile() {
   };
 
   return (
-    <div className="page-container">
+    <div className="page-container" style={{ backgroundImage: `url(${backgroundImage})` }}>
       <div className="edit-profile-container">
         <h2>Chỉnh sửa thông tin cá nhân</h2>
         {error && <div className="error-message">{error}</div>}
@@ -96,7 +97,13 @@ function EditProfile() {
         </div>
         <div className="form-group">
           <label>Email:</label>
-          <input type="email" name="email" value={userInfo.email} disabled />
+          <input
+            type="email"
+            name="email"
+            value={userInfo.email}
+            disabled
+            className="email-input" // Thêm class cho input email
+          />
         </div>
         <div className="form-group">
           <label>Số điện thoại:</label>

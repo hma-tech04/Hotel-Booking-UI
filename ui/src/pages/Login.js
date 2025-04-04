@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Footer from '../components/Footer';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import '../styles/login.css';
 
@@ -13,28 +12,19 @@ function Login({ updateAdminStatus }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
       const response = await fetch('http://localhost:5053/api/auth/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          password,
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
       });
-
       const data = await response.json();
-
-      if (response.ok && data.code === 200 && data.data && data.data.accessToken) {
+      if (response.ok && data.code === 200 && data.data?.accessToken) {
         localStorage.setItem('token', data.data.accessToken);
-        updateAdminStatus(data.data.accessToken); // Cập nhật trạng thái isAdmin
+        updateAdminStatus(data.data.accessToken);
         navigate('/');
       } else {
-        const errorMessage = data.message || 'Đăng nhập thất bại, vui lòng kiểm tra lại email hoặc mật khẩu.';
-        alert(`Lỗi: ${errorMessage}`);
+        alert(`Lỗi: ${data.message || 'Đăng nhập thất bại, vui lòng kiểm tra lại email hoặc mật khẩu.'}`);
       }
     } catch (error) {
       console.error('Error during login:', error);
@@ -43,26 +33,25 @@ function Login({ updateAdminStatus }) {
   };
 
   const handleGoogleSuccess = async (response) => {
-    console.log('Đăng nhập Google thành công:', response);
-
-    const googleToken = response.credential;
-
+    console.log('Google login success:', response);
+    const googleToken = response.credential; // Đảm bảo đây là idToken
+    const payload = { idToken: googleToken };
+    console.log('Payload sent to server:', payload);
     try {
       const apiResponse = await fetch('http://localhost:5053/api/auth/login-google', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ IdToken: googleToken }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
       });
-
       const apiData = await apiResponse.json();
-
-      if (apiResponse.ok && apiData.code === 200 && apiData.data && apiData.data.accessToken) {
+      console.log('Server response status:', apiResponse.status);
+      console.log('Server response data:', apiData);
+      if (apiResponse.ok && apiData.code === 200 && apiData.data?.accessToken) {
         localStorage.setItem('token', apiData.data.accessToken);
-        updateAdminStatus(apiData.data.accessToken); // Cập nhật trạng thái isAdmin
+        updateAdminStatus(apiData.data.accessToken);
         navigate('/');
       } else {
+        console.log('Login failed with response:', apiData);
         alert(`Lỗi: ${apiData.message || 'Đăng nhập Google thất bại. Vui lòng thử lại.'}`);
       }
     } catch (error) {
@@ -72,7 +61,7 @@ function Login({ updateAdminStatus }) {
   };
 
   const handleGoogleFailure = (error) => {
-    console.error('Đăng nhập Google thất bại:', error);
+    console.error('Google login failed:', error);
     alert(`Lỗi đăng nhập Google: ${error.error || 'Không xác định'}`);
   };
 
@@ -113,7 +102,7 @@ function Login({ updateAdminStatus }) {
             <GoogleLogin
               onSuccess={handleGoogleSuccess}
               onError={handleGoogleFailure}
-              useOneTap
+              scope="openid email profile" // Yêu cầu scope để lấy idToken
             />
           </div>
           <div className="login-links">
@@ -126,7 +115,6 @@ function Login({ updateAdminStatus }) {
           </div>
         </div>
       </div>
-      <Footer />
     </GoogleOAuthProvider>
   );
 }

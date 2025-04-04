@@ -4,16 +4,14 @@ import roomsData from "../roomsData"; // Import dữ liệu mock từ roomsData.
 import "../styles/style.css";
 import Footer from "./Footer";
 function RoomList() {
-  const [rooms, setRooms] = useState(roomsData); // Trạng thái lưu trữ phòng, khởi tạo từ roomsData
-  const [loading, setLoading] = useState(false); // Trạng thái loading, dù không cần thiết nhưng vẫn giữ để dễ quản lý
+  const [rooms, setRooms] = useState(roomsData); 
+  const [loading, setLoading] = useState(false); 
 
   useEffect(() => {
-    // Giả sử bạn có thể thực hiện các hành động khác trong useEffect nếu cần
-    // Nhưng ở đây bạn chỉ cần lấy dữ liệu từ roomsData trực tiếp
     setLoading(true);
-    setRooms(roomsData); // Dữ liệu phòng được lấy trực tiếp từ roomsData.js
+    setRooms(roomsData); 
     setLoading(false);
-  }, []); // Chạy khi component được render lần đầu
+  }, []); 
 
   if (loading) return <div>Loading rooms...</div>;
 
@@ -36,8 +34,8 @@ function RoomList() {
           </div>
         </div>
       </section>
-      <Footer />
     </div>
+
   );
 }
 

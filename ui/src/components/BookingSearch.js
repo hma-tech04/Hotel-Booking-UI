@@ -61,17 +61,6 @@ function BookingSearch() {
               required
             />
           </div>
-          <div className="box">
-            <label>Sort prices:</label>
-            <input
-              type="number"
-              name="Prices"
-              value={formData.Prices}
-              onChange={handleChange}
-              placeholder="0"
-              required
-            />
-          </div>
           <div className="search">
             <input type="submit" value="SEARCH" />
           </div>
