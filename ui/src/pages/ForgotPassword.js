@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/forgot-password.css';
 
-const API_URL = 'http://localhost:5053'; // Thêm URL thống nhất
+const API_URL = 'http://localhost:5053';
 
 function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -24,17 +24,23 @@ function ForgotPassword() {
 
   const handleSendEmail = async () => {
     try {
+      console.log('Sending OTP to:', email);
       const response = await fetch(`${API_URL}/api/auth/forgot-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email }), // Sửa "Email" thành "email"
+        body: JSON.stringify({ email: email }),
       });
       if (!response.ok) throw new Error('Gửi OTP thất bại');
       const result = await response.json();
-      if (result.errorCode !== 'OK') throw new Error(result.message || 'Gửi OTP thất bại');
-      setOtpSent(true);
-      setTimer(300);
+      console.log('API response (forgot-password):', result);
+      if (result.code === 200) {
+        setOtpSent(true);
+        setTimer(300);
+      } else {
+        throw new Error(result.message || 'Gửi OTP thất bại');
+      }
     } catch (error) {
+      console.error('Error in handleSendEmail:', error);
       alert(error.message || 'Có lỗi xảy ra khi gửi OTP!');
     }
   };
@@ -45,16 +51,22 @@ function ForgotPassword() {
       return;
     }
     try {
+      console.log('Verifying OTP:', otp, 'for email:', email);
       const response = await fetch(`${API_URL}/api/auth/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ Email: email, OTP: otp }),
       });
       const result = await response.json();
-      if (result.errorCode !== 'OK') throw new Error(result.message || 'OTP không đúng hoặc đã hết hạn');
-      localStorage.setItem('resetToken', result.data.token); // Lưu token
-      setIsOtpVerified(true);
+      console.log('API response (verify-otp):', result);
+      if (result.code === 200) {
+        localStorage.setItem('resetToken', result.data.token);
+        setIsOtpVerified(true);
+      } else {
+        throw new Error(result.message || 'OTP không đúng hoặc đã hết hạn');
+      }
     } catch (error) {
+      console.error('Error in handleVerifyOtp:', error);
       alert(error.message || 'Có lỗi xảy ra khi xác thực OTP!');
     }
   };
@@ -65,21 +77,27 @@ function ForgotPassword() {
       return;
     }
     try {
-      const token = localStorage.getItem('resetToken'); // Sửa từ 'accessToken' thành 'resetToken'
+      const token = localStorage.getItem('resetToken');
+      console.log('Resetting password with token:', token);
       const response = await fetch(`${API_URL}/api/auth/reset-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ NewPassword: newPassword }), // Bỏ "Email"
+        body: JSON.stringify({ NewPassword: newPassword }),
       });
       const result = await response.json();
-      if (result.errorCode !== 'OK') throw new Error(result.message || 'Cập nhật mật khẩu thất bại');
-      alert('Mật khẩu đã được cập nhật. Vui lòng đăng nhập lại.');
-      localStorage.removeItem('resetToken');
-      navigate('/login');
+      console.log('API response (reset-password):', result);
+      if (result.code === 200) {
+        alert('Mật khẩu đã được cập nhật. Vui lòng đăng nhập lại.');
+        localStorage.removeItem('resetToken');
+        navigate('/login');
+      } else {
+        throw new Error(result.message || 'Cập nhật mật khẩu thất bại');
+      }
     } catch (error) {
+      console.error('Error in handleResetPassword:', error);
       alert(error.message || 'Có lỗi xảy ra khi cập nhật mật khẩu!');
     }
   };

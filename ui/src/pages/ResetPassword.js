@@ -25,16 +25,22 @@ function ResetPassword() {
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
     try {
+      console.log('Submitting email:', email);
       const response = await fetch(`${API_URL}/api/auth/forgot-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email }), // Sửa "Email" thành "email"
+        body: JSON.stringify({ email: email }),
       });
       const result = await response.json();
-      if (result.errorCode !== 'OK') throw new Error(result.message || 'Gửi OTP thất bại');
-      setStep(2);
-      setTimer(300);
+      console.log('API response (forgot-password):', result);
+      if (result.code === 200) {
+        setStep(2);
+        setTimer(300);
+      } else {
+        throw new Error(result.message || 'Gửi OTP thất bại');
+      }
     } catch (error) {
+      console.error('Error in handleEmailSubmit:', error);
       alert(error.message || 'Có lỗi khi gửi OTP!');
     }
   };
@@ -47,16 +53,22 @@ function ResetPassword() {
       return;
     }
     try {
+      console.log('Verifying OTP:', otp, 'for email:', email);
       const response = await fetch(`${API_URL}/api/auth/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ Email: email, OTP: otp }),
       });
       const result = await response.json();
-      if (result.errorCode !== 'OK') throw new Error(result.message || 'OTP không đúng hoặc đã hết hạn');
-      localStorage.setItem('resetToken', result.data.token);
-      setStep(3);
+      console.log('API response (verify-otp):', result);
+      if (result.code === 200) {
+        localStorage.setItem('resetToken', result.data.token);
+        setStep(3);
+      } else {
+        throw new Error(result.message || 'OTP không đúng hoặc đã hết hạn');
+      }
     } catch (error) {
+      console.error('Error in handleOtpSubmit:', error);
       alert(error.message || 'Có lỗi khi xác thực OTP!');
     }
   };
@@ -69,6 +81,7 @@ function ResetPassword() {
     }
     try {
       const token = localStorage.getItem('resetToken');
+      console.log('Resetting password with token:', token);
       const response = await fetch(`${API_URL}/api/auth/reset-password`, {
         method: 'POST',
         headers: {
@@ -78,11 +91,16 @@ function ResetPassword() {
         body: JSON.stringify({ NewPassword: newPassword }),
       });
       const result = await response.json();
-      if (result.errorCode !== 'OK') throw new Error(result.message || 'Cập nhật mật khẩu thất bại');
-      alert('Mật khẩu đã được cập nhật!');
-      localStorage.removeItem('resetToken');
-      navigate('/login');
+      console.log('API response (reset-password):', result);
+      if (result.code === 200) {
+        alert('Mật khẩu đã được cập nhật!');
+        localStorage.removeItem('resetToken');
+        navigate('/login');
+      } else {
+        throw new Error(result.message || 'Cập nhật mật khẩu thất bại');
+      }
     } catch (error) {
+      console.error('Error in handleResetPassword:', error);
       alert(error.message || 'Có lỗi khi cập nhật mật khẩu!');
     }
   };
