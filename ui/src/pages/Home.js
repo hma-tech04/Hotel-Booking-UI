@@ -1,21 +1,23 @@
-
+// src/pages/Home.js
 import React, { useState } from 'react';
 import BookingSearch from '../components/BookingSearch';
 import RoomList from '../components/RoomList';
-import Footer from '../components/Footer';
 import '../styles/style.css';
 
 function Home() {
-  // Slider state
   const [currentSlide, setCurrentSlide] = useState("/images/home1.jpg");
+  const [searchResults, setSearchResults] = useState(null);
+  const [searchCriteria, setSearchCriteria] = useState(null);
 
   const handleSlideClick = (src) => setCurrentSlide(src);
 
+  const handleSearch = (results, formData) => {
+    setSearchResults(results);
+    setSearchCriteria(formData);
+  };
+
   return (
     <>
-      {/* Không cần Header ở đây, sẽ được xử lý ở App.js */}
-
-      {/* Banner */}
       <section className="home" id="home">
         <div className="head_container">
           <div className="box">
@@ -58,9 +60,8 @@ function Home() {
         </div>
       </section>
 
-      <BookingSearch />
-      <RoomList />
-      <Footer />
+      <BookingSearch onSearch={handleSearch} />
+      <RoomList searchResults={searchResults} searchCriteria={searchCriteria} />
     </>
   );
 }

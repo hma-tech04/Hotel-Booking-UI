@@ -36,8 +36,8 @@ function Login({ updateAdminStatus }) {
   const handleGoogleSuccess = async (response) => {
     console.log('Google login success:', response);
     const googleToken = response.credential;
-    const payload = { idToken: googleToken };
-    console.log('Payload sent to server:', payload);
+    const payload = { IdToken: googleToken };
+    console.log('Payload sent to server:', googleToken);
     try {
       const apiResponse = await fetch('http://localhost:5053/api/auth/login-google', {
         method: 'POST',

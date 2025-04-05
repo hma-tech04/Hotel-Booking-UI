@@ -1,15 +1,16 @@
 // src/components/BookingSearch.js
 import React, { useState } from 'react';
 
-function BookingSearch() {
+function BookingSearch({ onSearch }) { // Thêm prop onSearch
   const [formData, setFormData] = useState({
     checkIn: '',
     checkOut: '',
-    adults: 0,
+    adults: 'Standard',
     children: 0
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  // Handle form input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevState) => ({
@@ -18,11 +19,44 @@ function BookingSearch() {
     }));
   };
 
-  // Handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Booking Search Submitted:', formData);
+    
+    if (formData.checkIn && formData.checkOut && formData.adults) {
+      setLoading(true);
+      setError(null);
+      
+      try {
+        const response = await fetch(
+          `http://localhost:5053/api/rooms/available?checkInDate=${formData.checkIn}&checkOutDate=${formData.checkOut}&roomType=${formData.adults}`,
+          {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch available rooms');
+        }
+
+        const data = await response.json();
+        const availableRooms = data.data || [];
+        onSearch(availableRooms, formData); // Gửi kết quả và formData lên parent
+      } catch (err) {
+        setError(err.message);
+        console.error('Error fetching rooms:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
   };
+
+  const roomTypes = [
+    'Standard', 'Deluxe', 'Suite', 'Family Room', 'Executive',
+    'Penthouse', 'Twin Room', 'Single Room', 'Double Room', 'Studio'
+  ];
 
   return (
     <section className="book">
@@ -52,19 +86,27 @@ function BookingSearch() {
           </div>
           <div className="box">
             <label>Room Type:</label>
-            <input
-              type="Roomtype"
+            <select
               name="adults"
               value={formData.adults}
               onChange={handleChange}
-              placeholder="0"
               required
-            />
+              style={{ width: '100%', padding: '15px', marginTop: '10px', borderRadius: '5px', background: '#263760', color: 'white', border: '2px solid rgba(255, 255, 255, 0.1)' }}
+            >
+              {roomTypes.map((type) => (
+                <option key={type} value={type} style={{ background: '#263760', color: 'white' }}>
+                  {type}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="search">
-            <input type="submit" value="SEARCH" />
+            <input type="submit" value="SEARCH" disabled={loading} />
           </div>
         </form>
+
+        {loading && <p>Loading...</p>}
+        {error && <p style={{ color: 'red' }}>Error: {error}</p>}
       </div>
     </section>
   );

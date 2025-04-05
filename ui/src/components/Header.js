@@ -20,9 +20,11 @@ function Header({ isAdmin, updateAdminStatus }) {
       try {
         const decodedToken = jwtDecode(token);
         setIsLoggedIn(true);
+        const userId = decodedToken.id || decodedToken.sub || 1; // Lấy userId từ token hoặc mặc định là 1
+        fetchUserInfo(userId); // Gọi API để lấy thông tin đầy đủ
         const userName = decodedToken.name || decodedToken.username || decodedToken.email || 'Unknown';
         setUsername(isAdmin ? 'Admin' : userName);
-        setUserInfo(decodedToken);
+        setUserInfo(decodedToken); // Dữ liệu tạm từ token trong khi chờ API
         if (typeof updateAdminStatus === 'function') {
           updateAdminStatus(token);
         } else {
@@ -44,8 +46,24 @@ function Header({ isAdmin, updateAdminStatus }) {
         console.error('updateAdminStatus is not a function in Header');
       }
     }
-    // Không tự điều hướng sang /login, để App.js quản lý
   }, [isAdmin, isLoggedIn, location.pathname, updateAdminStatus]);
+
+  const fetchUserInfo = async (userId) => {
+    try {
+      const response = await fetch(`http://localhost:5053/api/user/id/${userId}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      const result = await response.json();
+      if (result.code === 200) {
+        setUserInfo(result.data); // Cập nhật userInfo từ API
+        setUsername(isAdmin ? 'Admin' : result.data.fullName); // Cập nhật username từ API
+      }
+    } catch (error) {
+      console.error('Error fetching user info:', error);
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -129,10 +147,14 @@ function Header({ isAdmin, updateAdminStatus }) {
                       <span className="nav-link greeting" onClick={toggleProfileDropdown}>
                         Hello, {username}
                       </span>
-                      {isProfileDropdownOpen && (
+                      {isProfileDropdownOpen && userInfo && (
                         <ul className="profile-dropdown">
-                          <li>Email: {userInfo?.email}</li>
-                          <li>Phone: {userInfo?.phone || 'Not set'}</li>
+                          <li>User ID: {userInfo.userId || 'Not available'}</li>
+                          <li>Full Name: {userInfo.fullName || 'Not available'}</li>
+                          <li>Email: {userInfo.email}</li>
+                          <li>Phone: {userInfo.phoneNumber || userInfo.phone || 'Not set'}</li>
+                          <li>Role: {userInfo.role || 'Not available'}</li>
+                          <li>Created: {userInfo.createdDate ? new Date(userInfo.createdDate).toLocaleDateString() : 'Not available'}</li>
                           <li>
                             <Link
                               to="/edit-profile"

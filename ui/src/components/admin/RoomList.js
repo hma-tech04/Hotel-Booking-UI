@@ -1,5 +1,4 @@
-// src/components/admin/RoomList.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Button as MuiButton,
   Dialog,
@@ -15,7 +14,7 @@ import {
   TableRow,
   IconButton,
 } from '@mui/material';
-import { mockRooms } from './mockData';
+import axios from 'axios';
 import ImageIcon from '@mui/icons-material/Image';
 
 const RoomList = () => {
@@ -26,12 +25,41 @@ const RoomList = () => {
     roomType: '',
     price: '',
     description: '',
-    thumbnailUrl: '',
+    thumbnailUrl: null,
     isAvailable: false,
     roomImages: [],
   });
   const [searchQuery, setSearchQuery] = useState('');
-  const [rooms, setRooms] = useState(mockRooms);
+  const [rooms, setRooms] = useState([]);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchRooms = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) throw new Error("No authentication token found. Please log in.");
+
+        const response = await axios.get('http://localhost:5053/api/rooms/all', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const roomData = response.data.data || response.data;
+        if (Array.isArray(roomData)) {
+          setRooms(roomData);
+        } else {
+          throw new Error("Invalid data format from API");
+        }
+      } catch (err) {
+        setError(
+          err.response?.status === 401
+            ? "Unauthorized: Please log in to view rooms."
+            : "Failed to load rooms. Please check the API or console for details."
+        );
+        console.error("Error fetching rooms:", err.response || err);
+      }
+    };
+    fetchRooms();
+  }, []);
 
   const handleOpenDialog = (action, room = null) => {
     setAction(action);
@@ -41,16 +69,16 @@ const RoomList = () => {
         roomType: room.roomType,
         price: room.price,
         description: room.description || '',
-        thumbnailUrl: room.thumbnailUrl || '',
+        thumbnailUrl: null, // Reset để yêu cầu file mới khi cập nhật
         isAvailable: room.isAvailable,
-        roomImages: room.roomImages || [],
+        roomImages: [],
       });
     } else {
       setRoomData({
         roomType: '',
         price: '',
         description: '',
-        thumbnailUrl: '',
+        thumbnailUrl: null,
         isAvailable: false,
         roomImages: [],
       });
@@ -66,34 +94,94 @@ const RoomList = () => {
       roomType: '',
       price: '',
       description: '',
-      thumbnailUrl: '',
+      thumbnailUrl: null,
       isAvailable: false,
       roomImages: [],
     });
   };
 
-  const handleSave = () => {
-    if (action === 'add') {
-      const newRoom = {
-        id: rooms.length + 1,
-        ...roomData,
-        price: Number(roomData.price),
-        roomImages: roomData.roomImages,
-      };
-      setRooms([...rooms, newRoom]);
-    } else if (action === 'update') {
-      const updatedRooms = rooms.map((room) =>
-        room.id === selectedRoom.id
-          ? { ...room, ...roomData, price: Number(roomData.price), roomImages: roomData.roomImages }
-          : room
-      );
-      setRooms(updatedRooms);
+  const handleSave = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setError("No authentication token found. Please log in.");
+      return;
     }
-    handleCloseDialog();
+
+    // Kiểm tra các trường bắt buộc
+    if (!roomData.roomType || roomData.roomType.length < 3) {
+      setError("Room type must be at least 3 characters.");
+      return;
+    }
+    if (!roomData.price || isNaN(roomData.price)) {
+      setError("Price must be a valid number.");
+      return;
+    }
+    if (!roomData.thumbnailUrl) {
+      setError("Thumbnail image is required.");
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append("RoomType", roomData.roomType);
+      formData.append("Price", Number(roomData.price).toString());
+      formData.append("Description", roomData.description || "");
+      formData.append("IsAvailable", roomData.isAvailable.toString());
+      formData.append("ThumbnailUrl", roomData.thumbnailUrl); // Gửi file
+
+      // Gửi RoomImages dưới dạng List<IFormFile>
+      if (roomData.roomImages && roomData.roomImages.length > 0) {
+        roomData.roomImages.forEach((file) => {
+          formData.append("RoomImages", file); // Tên trường phải khớp với backend
+        });
+      }
+
+      // Log dữ liệu gửi đi
+      for (let pair of formData.entries()) {
+        console.log(`${pair[0]}: ${pair[1]}`);
+      }
+
+      let response;
+      if (action === 'add') {
+        response = await axios.post('http://localhost:5053/api/rooms', formData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        const newRoom = response.data.data;
+        setRooms([...rooms, newRoom]);
+      } else if (action === 'update') {
+        response = await axios.put(
+          `http://localhost:5053/api/rooms/${selectedRoom.roomId}`,
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'multipart/form-data',
+            },
+          }
+        );
+        const updatedRoom = response.data.data;
+        const updatedRooms = rooms.map((room) =>
+          room.roomId === selectedRoom.roomId ? updatedRoom : room
+        );
+        setRooms(updatedRooms);
+      }
+
+      handleCloseDialog();
+    } catch (err) {
+      setError(
+        err.response?.status === 401
+          ? "Unauthorized: You must be an admin to perform this action."
+          : err.response?.data?.message || "Failed to save room. Please check the API or console for details."
+      );
+      console.error("Error saving room:", err.response || err);
+    }
   };
 
   const handleDelete = () => {
-    const updatedRooms = rooms.filter((room) => room.id !== selectedRoom.id);
+    const updatedRooms = rooms.filter((room) => room.roomId !== selectedRoom.roomId);
     setRooms(updatedRooms);
     handleCloseDialog();
   };
@@ -101,14 +189,13 @@ const RoomList = () => {
   const handleThumbnailChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setRoomData({ ...roomData, thumbnailUrl: file.name });
+      setRoomData({ ...roomData, thumbnailUrl: file });
     }
   };
 
   const handleImagesChange = (e) => {
     const files = Array.from(e.target.files);
-    const fileNames = files.map((file) => file.name);
-    setRoomData({ ...roomData, roomImages: fileNames });
+    setRoomData({ ...roomData, roomImages: files });
   };
 
   const filteredRooms = rooms.filter((room) =>
@@ -117,6 +204,7 @@ const RoomList = () => {
 
   return (
     <div style={{ padding: '20px', width: '100%' }}>
+      {error && <div style={{ color: 'red', marginBottom: '20px' }}>{error}</div>}
       <MuiTextField
         label="Tìm kiếm theo Loại phòng"
         value={searchQuery}
@@ -146,7 +234,7 @@ const RoomList = () => {
         </TableHead>
         <TableBody>
           {filteredRooms.map((room) => (
-            <TableRow key={room.id}>
+            <TableRow key={room.roomId}>
               <TableCell>{room.roomType}</TableCell>
               <TableCell>{room.price}</TableCell>
               <TableCell>{room.description || 'N/A'}</TableCell>
@@ -228,7 +316,7 @@ const RoomList = () => {
                   style={{ marginLeft: '10px' }}
                 />
                 {roomData.thumbnailUrl && (
-                  <span style={{ marginLeft: '10px' }}>{roomData.thumbnailUrl}</span>
+                  <span style={{ marginLeft: '10px' }}>{roomData.thumbnailUrl.name}</span>
                 )}
               </div>
               <div style={{ marginBottom: '10px' }}>

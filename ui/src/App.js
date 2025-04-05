@@ -13,7 +13,8 @@ import RoomDetail from './pages/RoomDetail';
 import BookingManagement from './pages/BookingManagement';
 import BookingDetails from './pages/BookingDetails';
 import BookingPage from './pages/BookingPage';
-import ForgotPassword from './pages/ForgotPassword';
+import ForgotPassword from './pages/ForgotPassword'; // Giữ nếu bạn có file này
+import ResetPassword from './pages/ResetPassword'; // Thêm import cho ResetPassword
 import HotelManagement from './HotelManagement';
 import EditProfile from './components/EditProfile';
 
@@ -24,7 +25,6 @@ function App() {
   const location = useLocation();
 
   const updateAdminStatus = (token) => {
-    console.log('updateAdminStatus called, token:', !!token, 'path:', location.pathname);
     if (token) {
       try {
         const decoded = jwtDecode(token);
@@ -46,12 +46,10 @@ function App() {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    console.log('App useEffect, token exists:', !!token, 'path:', location.pathname);
     updateAdminStatus(token);
   }, [location.pathname]);
 
   const ProtectedRoute = ({ children }) => {
-    console.log('ProtectedRoute, isAuthenticated:', isAuthenticated, 'path:', location.pathname);
     if (!isAuthenticated) {
       return <Navigate to="/login" replace />;
     }
@@ -59,7 +57,6 @@ function App() {
   };
 
   const AdminRoute = ({ children }) => {
-    console.log('AdminRoute, isAuthenticated:', isAuthenticated, 'isAdmin:', isAdmin, 'path:', location.pathname);
     if (!isAuthenticated || !isAdmin) {
       return <Navigate to="/" replace />;
     }
@@ -87,7 +84,8 @@ function App() {
               <Route path="/register" element={<Register />} />
               <Route path="/rooms" element={<RoomCardDisplay />} />
               <Route path="/room/:roomId" element={<RoomDetail />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} /> {/* Giữ nếu cần */}
+              <Route path="/reset-password" element={<ResetPassword />} /> {/* Thêm route mới */}
               <Route
                 path="/booking-details/:bookingId"
                 element={<ProtectedRoute><BookingDetails /></ProtectedRoute>}

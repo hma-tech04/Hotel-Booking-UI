@@ -7,9 +7,10 @@ import backgroundImage from '../images/home1.jpg';
 function EditProfile() {
   const navigate = useNavigate();
   const [userInfo, setUserInfo] = useState({
-    name: '',
-    email: '',
-    phone: '',
+    FullName: '',
+    Email: '',
+    PhoneNumber: '',
+    Role: '',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -17,18 +18,20 @@ function EditProfile() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
+      setError('Không tìm thấy token, vui lòng đăng nhập lại');
       navigate('/login');
       return;
     }
     try {
       const decoded = jwtDecode(token);
       setUserInfo({
-        name: decoded.name || decoded.username || '',
-        email: decoded.email || '',
-        phone: decoded.phone || '',
+        FullName: decoded.given_name || decoded.FullName || decoded.fullName || decoded.name || '',
+        Email: decoded.email || decoded.Email || '',
+        PhoneNumber: decoded.PhoneNumber || decoded.phoneNumber || '',
+        Role: decoded.role || decoded.Role || '',
       });
     } catch (err) {
-      setError('Không thể tải thông tin người dùng');
+      setError('Token không hợp lệ, vui lòng đăng nhập lại');
       navigate('/login');
     }
   }, [navigate]);
@@ -38,38 +41,61 @@ function EditProfile() {
     setUserInfo(prev => ({ ...prev, [name]: value }));
   };
 
-  const validatePhone = (phone) => {
+  const validatePhone = (PhoneNumber) => {
     const phoneRegex = /^\d{10,11}$/;
-    return phoneRegex.test(phone);
+    return phoneRegex.test(PhoneNumber);
   };
 
   const handleSave = async () => {
-    if (!userInfo.name.trim()) {
+    if (!userInfo.FullName.trim()) {
       setError('Vui lòng nhập tên');
       return;
     }
-    if (userInfo.phone && !validatePhone(userInfo.phone)) {
+    if (userInfo.PhoneNumber && !validatePhone(userInfo.PhoneNumber)) {
       setError('Số điện thoại không hợp lệ (cần 10-11 số)');
+      return;
+    }
+    if (!userInfo.Email.trim()) {
+      setError('Email không được để trống');
       return;
     }
     setLoading(true);
     setError('');
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/update-profile', {
+      const decoded = jwtDecode(token);
+      const currentTime = Math.floor(Date.now() / 1000);
+      if (decoded.exp < currentTime) {
+        throw new Error('Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại');
+      }
+      const response = await fetch('http://localhost:5053/api/user', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
-          name: userInfo.name,
-          phone: userInfo.phone,
+          FullName: userInfo.FullName,
+          Email: userInfo.Email,
+          PhoneNumber: userInfo.PhoneNumber || null,
+          Role: userInfo.Role,
         }),
       });
-      if (!response.ok) throw new Error('Cập nhật thông tin thất bại');
-      const data = await response.json();
-      if (data.token) localStorage.setItem('token', data.token);
+
+      if (!response.ok) {
+        let errorMessage = 'Cập nhật thông tin thất bại';
+        if (response.status !== 204 && response.headers.get('Content-Length') !== '0') {
+          const text = await response.text();
+          try {
+            const errorData = JSON.parse(text);
+            errorMessage = errorData.message || errorMessage;
+          } catch {
+            errorMessage = text || errorMessage;
+          }
+        }
+        throw new Error(`${errorMessage} (Status: ${response.status})`);
+      }
+
       alert('Cập nhật thông tin thành công!');
       navigate('/');
     } catch (err) {
@@ -77,6 +103,11 @@ function EditProfile() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Hàm điều hướng đến ResetPassword
+  const handleResetPasswordNavigation = () => {
+    navigate('/reset-password');
   };
 
   return (
@@ -88,8 +119,8 @@ function EditProfile() {
           <label>Tên:</label>
           <input
             type="text"
-            name="name"
-            value={userInfo.name}
+            name="FullName"
+            value={userInfo.FullName}
             onChange={handleChange}
             disabled={loading}
             placeholder="Nhập tên của bạn"
@@ -99,18 +130,20 @@ function EditProfile() {
           <label>Email:</label>
           <input
             type="email"
-            name="email"
-            value={userInfo.email}
-            disabled
-            className="email-input" // Thêm class cho input email
+            name="Email"
+            value={userInfo.Email}
+            onChange={handleChange}
+            disabled={loading}
+            placeholder="Nhập email của bạn"
+            className="email-input"
           />
         </div>
         <div className="form-group">
           <label>Số điện thoại:</label>
           <input
             type="text"
-            name="phone"
-            value={userInfo.phone}
+            name="PhoneNumber"
+            value={userInfo.PhoneNumber}
             onChange={handleChange}
             disabled={loading}
             placeholder="Nhập số điện thoại"
@@ -118,6 +151,15 @@ function EditProfile() {
         </div>
         <button onClick={handleSave} className="save-button" disabled={loading}>
           {loading ? 'Đang lưu...' : 'Lưu thay đổi'}
+        </button>
+        {/* Nút đặt lại mật khẩu */}
+        <button
+          onClick={handleResetPasswordNavigation}
+          className="reset-password-button"
+          disabled={loading}
+          style={{ marginTop: '10px' }}
+        >
+          Đặt lại mật khẩu
         </button>
       </div>
     </div>

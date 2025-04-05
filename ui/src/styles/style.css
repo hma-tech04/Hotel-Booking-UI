@@ -1,3 +1,4 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@200;300;400;500;600;700;800;900&display=swap');
 /* Reset margin & padding */
 * {
@@ -243,33 +244,45 @@ button {
   margin-top: 5%;
   width: 100%;
   color: white;
-  padding: 30px;
-  background-color: #242e5a; /* Background color */
-  border-radius: 10px; /* Rounded corners for the section */
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Add shadow */
+  padding: 0;
+  background-color: #1a2a44; /* Màu nền tối hơn một chút để tạo độ sâu */
+  border-radius: 15px; /* Bo góc mềm mại hơn */
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3); /* Bóng đổ mạnh hơn để tạo chiều sâu */
   display: flex;
-  justify-content: center; /* Horizontally center the form */
-  align-items: flex-start; /* Align items to the top */
-  min-height: 40vh; /* Reduce the height to make the box less tall */
-  margin-left: auto; /* Center form horizontally */
-  margin-right: auto; /* Center form horizontally */
-  width: 80%; /* Increase the width to make the form wider */
-  max-width: 1200px; /* Max width for larger screens */
-}
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 40vh;
+  margin-left: auto;
+  margin-right: auto;
+  width: 80%;
+  max-width: 1200px;
+}   
 
 /* Styling for form container */
 .book .input {
-  display: grid; /* Use grid for responsive layout */
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20px; /* Space between inputs */
+  display: grid;
+  grid-template-columns: repeat(3, 1fr) 150px;
+  gap: 25px; /* Tăng khoảng cách giữa các trường để thoáng hơn */
   background: #263760;
-  padding: 20px;
-  border-radius: 10px; /* Rounded corners for the form */
-  width: 100%; /* Make sure the form takes up all the space */
-  margin-left: auto; /* Center form horizontally */
-  margin-right: auto; /* Center form horizontally */
+  padding: 25px; /* Tăng padding để tạo không gian rộng rãi */
+  border-radius: 15px;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
 }
-
+input, select {
+  width: 100%;
+  padding: 12px 15px; /* Điều chỉnh padding để trường nhỏ gọn hơn */
+  border: none; /* Bỏ viền mặc định */
+  outline: none;
+  background: #1f2a44; /* Màu nền tối hơn để tạo độ tương phản */
+  margin-top: 8px;
+  color: white;
+  font-size: 16px;
+  border-radius: 8px; /* Bo góc mềm mại hơn */
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2); /* Hiệu ứng lõm nhẹ */
+  transition: all 0.3s ease; /* Hiệu ứng mượt mà khi focus */
+}
 /* Styling for individual input fields */
 input {
   width: 100%;
@@ -283,71 +296,92 @@ input {
   border-radius: 5px;
 }
 
-input:focus {
-  border-color: #3f9cc1; /* Highlight border color on focus */
+input:focus, select:focus {
+  background: #2a3a5a; /* Màu nền sáng hơn khi focus */
+  box-shadow: 0 0 8px rgba(63, 156, 193, 0.5); /* Hiệu ứng sáng khi focus */
 }
-
+.book .box label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #d1d5db; /* Màu chữ nhạt hơn để tạo độ tương phản */
+}
 ::placeholder {
-  color: white;
+  color: #a3a9b5; /* Màu placeholder nhạt hơn */
   font-size: 14px;
 }
 
 /* Styling for search button */
 .book .search {
-  grid-column: span 4; /* Make the search button span across all columns */
   display: flex;
   justify-content: center;
-  padding-top: 20px;
+  align-items: flex-end;
+  padding: 0;
 }
 
 .book .search input {
-  width: 50%; /* Adjust width of submit button */
-  padding: 15px;
-  background: #3f9cc1;
+  width: 100%;
+  padding: 12px 15px;
+  background: linear-gradient(135deg, #3f9cc1, #2c7fa6); /* Gradient cho nút Search */
   color: white;
   font-weight: bold;
-  font-size: 18px;
+  font-size: 16px;
   border: none;
-  border-radius: 5px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: all 0.3s ease;
+  height: 48px; /* Đảm bảo chiều cao đồng nhất với input/select */
+  box-shadow: 0 4px 10px rgba(63, 156, 193, 0.3); /* Bóng đổ nhẹ cho nút */
 }
 
 .book .search input:hover {
-  background-color: #2c7fa6; /* Change button color on hover */
+  background: linear-gradient(135deg, #2c7fa6, #1c5b7f); /* Gradient tối hơn khi hover */
+  transform: translateY(-2px); /* Hiệu ứng nâng nhẹ khi hover */
+  box-shadow: 0 6px 15px rgba(63, 156, 193, 0.4);
 }
 
 .book .search input:active {
-  background-color: #1c5b7f; /* Button color on active click */
+  background: linear-gradient(135deg, #1c5b7f, #144c6e);
+  transform: translateY(0); /* Trở lại vị trí ban đầu khi click */
+  box-shadow: 0 2px 5px rgba(63, 156, 193, 0.2);
 }
 
 /* Responsive Design - Mobile Devices */
 @media (max-width: 768px) {
   .book .input {
-    grid-template-columns: 1fr 1fr; /* Use 2 columns on smaller screens */
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    padding: 20px;
+  }
+
+  .book .search {
+    grid-column: span 2;
   }
 
   .book .search input {
-    width: 80%; /* Make the submit button wider on mobile */
+    width: 80%;
     font-size: 16px;
   }
 
-  /* Optional: Reduce the padding for smaller screens */
   .book {
-    padding: 20px;
+    padding: 0;
   }
 }
 
 @media (max-width: 480px) {
   .book .input {
-    grid-template-columns: 1fr; /* Single column on very small screens */
+    grid-template-columns: 1fr;
+    gap: 15px;
+    padding: 15px;
+  }
+
+  .book .search {
+    grid-column: span 1;
   }
 
   .book .search input {
-    width: 90%; /* Slightly increase the width on very small screens */
+    width: 90%;
   }
 }
-
 
 /*--------------about--------*/
 .top {
@@ -894,7 +928,7 @@ footer li:hover {
 
 .user-icon {
   font-size: 20px;
-  color: #333;
+  color: #ffffff;
 }
 
 .dropdown-menu {
