@@ -1,6 +1,5 @@
-// src/App.js
-import React, { useState } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
 import { CssBaseline } from '@mui/material';
@@ -16,22 +15,55 @@ import BookingDetails from './pages/BookingDetails';
 import BookingPage from './pages/BookingPage';
 import ForgotPassword from './pages/ForgotPassword';
 import HotelManagement from './HotelManagement';
-import EditProfile from './components/EditProfile'; // Add this import
+import EditProfile from './components/EditProfile';
 
 function App() {
   const [isAdmin, setIsAdmin] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const updateAdminStatus = (token) => {
+    console.log('updateAdminStatus called, token:', !!token, 'path:', location.pathname);
     if (token) {
       try {
         const decoded = jwtDecode(token);
-        setIsAdmin(decoded.role.toLowerCase() === 'admin');
+        setIsAdmin(decoded.role?.toLowerCase() === 'admin');
+        setIsAuthenticated(true);
+        if (location.pathname === '/login' || location.pathname === '/register') {
+          navigate('/', { replace: true });
+        }
       } catch (error) {
+        console.error('Error decoding token in App.js:', error);
         setIsAdmin(false);
+        setIsAuthenticated(false);
       }
     } else {
       setIsAdmin(false);
+      setIsAuthenticated(false);
     }
+  };
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    console.log('App useEffect, token exists:', !!token, 'path:', location.pathname);
+    updateAdminStatus(token);
+  }, [location.pathname]);
+
+  const ProtectedRoute = ({ children }) => {
+    console.log('ProtectedRoute, isAuthenticated:', isAuthenticated, 'path:', location.pathname);
+    if (!isAuthenticated) {
+      return <Navigate to="/login" replace />;
+    }
+    return children;
+  };
+
+  const AdminRoute = ({ children }) => {
+    console.log('AdminRoute, isAuthenticated:', isAuthenticated, 'isAdmin:', isAdmin, 'path:', location.pathname);
+    if (!isAuthenticated || !isAdmin) {
+      return <Navigate to="/" replace />;
+    }
+    return children;
   };
 
   return (
@@ -55,22 +87,28 @@ function App() {
               <Route path="/register" element={<Register />} />
               <Route path="/rooms" element={<RoomCardDisplay />} />
               <Route path="/room/:roomId" element={<RoomDetail />} />
-              <Route path="/booking-details/:bookingId" element={<BookingDetails />} />
-              <Route path="/booking-page/:roomId" element={<BookingPage />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route
+                path="/booking-details/:bookingId"
+                element={<ProtectedRoute><BookingDetails /></ProtectedRoute>}
+              />
+              <Route
+                path="/booking-page/:roomId"
+                element={<ProtectedRoute><BookingPage /></ProtectedRoute>}
+              />
+              <Route
+                path="/edit-profile"
+                element={<ProtectedRoute><EditProfile /></ProtectedRoute>}
+              />
+              <Route
                 path="/booking-management"
-                element={isAdmin ? <BookingManagement /> : <Navigate to="/" />}
+                element={<ProtectedRoute><BookingManagement /></ProtectedRoute>}
               />
               <Route
                 path="/admin"
-                element={isAdmin ? <HotelManagement /> : <Navigate to="/" />}
+                element={<AdminRoute><HotelManagement /></AdminRoute>}
               />
-              <Route 
-                path="/edit-profile" 
-                element={<EditProfile />} 
-              /> {/* Added EditProfile route */}
-              <Route path="*" element={<Navigate to="/" />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </div>
         </main>

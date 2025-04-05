@@ -22,7 +22,8 @@ function Login({ updateAdminStatus }) {
       if (response.ok && data.code === 200 && data.data?.accessToken) {
         localStorage.setItem('token', data.data.accessToken);
         updateAdminStatus(data.data.accessToken);
-        navigate('/');
+        console.log('Login successful, navigating to /');
+        navigate('/', { replace: true });
       } else {
         alert(`Lỗi: ${data.message || 'Đăng nhập thất bại, vui lòng kiểm tra lại email hoặc mật khẩu.'}`);
       }
@@ -34,7 +35,7 @@ function Login({ updateAdminStatus }) {
 
   const handleGoogleSuccess = async (response) => {
     console.log('Google login success:', response);
-    const googleToken = response.credential; // Đảm bảo đây là idToken
+    const googleToken = response.credential;
     const payload = { idToken: googleToken };
     console.log('Payload sent to server:', payload);
     try {
@@ -49,7 +50,8 @@ function Login({ updateAdminStatus }) {
       if (apiResponse.ok && apiData.code === 200 && apiData.data?.accessToken) {
         localStorage.setItem('token', apiData.data.accessToken);
         updateAdminStatus(apiData.data.accessToken);
-        navigate('/');
+        console.log('Google login successful, navigating to /');
+        navigate('/', { replace: true });
       } else {
         console.log('Login failed with response:', apiData);
         alert(`Lỗi: ${apiData.message || 'Đăng nhập Google thất bại. Vui lòng thử lại.'}`);
@@ -102,7 +104,7 @@ function Login({ updateAdminStatus }) {
             <GoogleLogin
               onSuccess={handleGoogleSuccess}
               onError={handleGoogleFailure}
-              scope="openid email profile" // Yêu cầu scope để lấy idToken
+              scope="openid email profile"
             />
           </div>
           <div className="login-links">

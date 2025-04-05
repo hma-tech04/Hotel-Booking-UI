@@ -1,4 +1,3 @@
-// src/components/Header.js
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
@@ -15,31 +14,38 @@ function Header({ isAdmin, updateAdminStatus }) {
   const dropdownRef = useRef(null);
 
   useEffect(() => {
+    console.log('Header useEffect, path:', location.pathname, 'token:', !!localStorage.getItem('token'));
     const token = localStorage.getItem('token');
-    if (token) {
+    if (token && !isLoggedIn) {
       try {
         const decodedToken = jwtDecode(token);
-        console.log('Decoded token:', decodedToken); // Debug để xem token chứa gì
         setIsLoggedIn(true);
-        // Lấy tên người dùng từ token, ưu tiên field 'name' hoặc 'username'
         const userName = decodedToken.name || decodedToken.username || decodedToken.email || 'Unknown';
-        setUsername(isAdmin ? 'Admin' : userName); // Nếu là admin thì hiển thị "Admin", nếu không thì lấy từ token
+        setUsername(isAdmin ? 'Admin' : userName);
         setUserInfo(decodedToken);
-        updateAdminStatus(token);
+        if (typeof updateAdminStatus === 'function') {
+          updateAdminStatus(token);
+        } else {
+          console.error('updateAdminStatus is not a function in Header');
+        }
       } catch (error) {
-        console.error('Error decoding token:', error);
+        console.error('Error decoding token in Header:', error);
         setIsLoggedIn(false);
         setUsername('');
-        navigate('/login');
+        setUserInfo(null);
       }
-    } else {
+    } else if (!token && isLoggedIn) {
       setIsLoggedIn(false);
       setUsername('');
       setUserInfo(null);
-      updateAdminStatus(null);
-      navigate('/login');
+      if (typeof updateAdminStatus === 'function') {
+        updateAdminStatus(null);
+      } else {
+        console.error('updateAdminStatus is not a function in Header');
+      }
     }
-  }, [updateAdminStatus, isAdmin, navigate]);
+    // Không tự điều hướng sang /login, để App.js quản lý
+  }, [isAdmin, isLoggedIn, location.pathname, updateAdminStatus]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -65,8 +71,12 @@ function Header({ isAdmin, updateAdminStatus }) {
   const handleLogout = () => {
     setIsLoggedIn(false);
     localStorage.removeItem('token');
-    updateAdminStatus(null);
-    navigate('/');
+    if (typeof updateAdminStatus === 'function') {
+      updateAdminStatus(null);
+    } else {
+      console.error('updateAdminStatus is not a function in handleLogout');
+    }
+    navigate('/', { replace: true });
   };
 
   const isAdminRoute = location.pathname.startsWith('/admin') || location.pathname.startsWith('/booking-management');
@@ -82,7 +92,7 @@ function Header({ isAdmin, updateAdminStatus }) {
             <img src="/images/logo.png" alt="Hotel Logo" />
           </Link>
           <ul className="nav-menu">
-            <li><Link to="/" className="nav-link">Home</Link></li>
+            <li><Link to="/" className="nav-link" onClick={() => console.log('Home clicked in Header')}>Home</Link></li>
             <li><Link to="/rooms" className="nav-link">Rooms</Link></li>
             {isAdmin && (
               <li>
