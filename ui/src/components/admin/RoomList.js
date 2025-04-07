@@ -15,7 +15,12 @@ import {
   IconButton,
 } from '@mui/material';
 import axios from 'axios';
-import ImageIcon from '@mui/icons-material/Image';
+import {
+  searchFieldStyle,
+  textFieldStyle,
+  descriptionFieldStyle,
+  tableStyle,
+} from '../../styles/RoomList.css';
 
 const RoomList = () => {
   const [openDialog, setOpenDialog] = useState(false);
@@ -69,7 +74,7 @@ const RoomList = () => {
         roomType: room.roomType,
         price: room.price,
         description: room.description || '',
-        thumbnailUrl: null, // Reset để yêu cầu file mới khi cập nhật
+        thumbnailUrl: null,
         isAvailable: room.isAvailable,
         roomImages: [],
       });
@@ -107,7 +112,6 @@ const RoomList = () => {
       return;
     }
 
-    // Kiểm tra các trường bắt buộc
     if (!roomData.roomType || roomData.roomType.length < 3) {
       setError("Room type must be at least 3 characters.");
       return;
@@ -127,16 +131,14 @@ const RoomList = () => {
       formData.append("Price", Number(roomData.price).toString());
       formData.append("Description", roomData.description || "");
       formData.append("IsAvailable", roomData.isAvailable.toString());
-      formData.append("ThumbnailUrl", roomData.thumbnailUrl); // Gửi file
+      formData.append("ThumbnailUrl", roomData.thumbnailUrl);
 
-      // Gửi RoomImages dưới dạng List<IFormFile>
       if (roomData.roomImages && roomData.roomImages.length > 0) {
         roomData.roomImages.forEach((file) => {
-          formData.append("RoomImages", file); // Tên trường phải khớp với backend
+          formData.append("RoomImages", file);
         });
       }
 
-      // Log dữ liệu gửi đi
       for (let pair of formData.entries()) {
         console.log(`${pair[0]}: ${pair[1]}`);
       }
@@ -180,10 +182,31 @@ const RoomList = () => {
     }
   };
 
-  const handleDelete = () => {
-    const updatedRooms = rooms.filter((room) => room.roomId !== selectedRoom.roomId);
-    setRooms(updatedRooms);
-    handleCloseDialog();
+  const handleDelete = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setError("No authentication token found. Please log in.");
+      return;
+    }
+
+    try {
+      await axios.delete(`http://localhost:5053/api/rooms/${selectedRoom.roomId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const updatedRooms = rooms.filter((room) => room.roomId !== selectedRoom.roomId);
+      setRooms(updatedRooms);
+      handleCloseDialog();
+    } catch (err) {
+      setError(
+        err.response?.status === 401
+          ? "Unauthorized: You must be an admin to delete a room."
+          : err.response?.data?.message || "Failed to delete room. Please check the API or console for details."
+      );
+      console.error("Error deleting room:", err.response || err);
+    }
   };
 
   const handleThumbnailChange = (e) => {
@@ -211,35 +234,7 @@ const RoomList = () => {
         onChange={(e) => setSearchQuery(e.target.value)}
         fullWidth
         style={{ marginBottom: '20px' }}
-        sx={{
-          '& .MuiInputBase-root': {
-            backgroundColor: '#ffffff', // Nền trắng mặc định
-            WebkitTapHighlightColor: 'transparent', // Loại bỏ highlight mặc định trên trình duyệt
-          },
-          '& .MuiOutlinedInput-root': {
-            '& fieldset': {
-              borderColor: '#e0e0e0', // Viền xám nhạt mặc định
-            },
-            '&:hover fieldset': {
-              borderColor: '#f48fb1', // Viền hồng khi hover
-            },
-            '&.Mui-focused': {
-              '& .MuiInputBase-root': {
-                backgroundColor: '#ffebee', // Nền hồng nhạt khi focus
-              },
-              '& fieldset': {
-                borderColor: '#f06292', // Viền hồng đậm khi focus
-              },
-            },
-          },
-          // Loại bỏ hiệu ứng highlight của trình duyệt
-          '& input': {
-            WebkitTapHighlightColor: 'transparent',
-            '&:focus': {
-              backgroundColor: '#ffebee', // Đảm bảo nền hồng nhạt khi focus
-            },
-          },
-        }}
+        sx={searchFieldStyle}
       />
       <MuiButton
         variant="contained"
@@ -249,7 +244,7 @@ const RoomList = () => {
       >
         Thêm phòng
       </MuiButton>
-      <Table sx={{ width: '100%' }}>
+      <Table sx={tableStyle}>
         <TableHead>
           <TableRow>
             <TableCell>Loại phòng</TableCell>
@@ -269,10 +264,13 @@ const RoomList = () => {
               <TableCell>{room.description || 'N/A'}</TableCell>
               <TableCell>
                 {room.thumbnailUrl ? (
-                  <IconButton>
-                    <ImageIcon />
-                    <span style={{ marginLeft: '5px' }}>{room.thumbnailUrl}</span>
-                  </IconButton>
+                  <a
+                    href={`http://localhost:5053${room.thumbnailUrl}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {room.thumbnailUrl}
+                  </a>
                 ) : (
                   'N/A'
                 )}
@@ -318,35 +316,7 @@ const RoomList = () => {
                 onChange={(e) => setRoomData({ ...roomData, roomType: e.target.value })}
                 fullWidth
                 style={{ marginBottom: '10px', marginTop: '10px' }}
-                sx={{
-                  '& .MuiInputBase-root': {
-                    backgroundColor: '#ffffff', // Nền trắng mặc định
-                    WebkitTapHighlightColor: 'transparent', // Loại bỏ highlight mặc định trên trình duyệt
-                  },
-                  '& .MuiOutlinedInput-root': {
-                    '& fieldset': {
-                      borderColor: '#e0e0e0', // Viền xám nhạt mặc định
-                    },
-                    '&:hover fieldset': {
-                      borderColor: '#f48fb1', // Viền hồng khi hover
-                    },
-                    '&.Mui-focused': {
-                      '& .MuiInputBase-root': {
-                        backgroundColor: '#ffebee', // Nền hồng nhạt khi focus
-                      },
-                      '& fieldset': {
-                        borderColor: '#f06292', // Viền hồng đậm khi focus
-                      },
-                    },
-                  },
-                  // Loại bỏ hiệu ứng highlight của trình duyệt
-                  '& input': {
-                    WebkitTapHighlightColor: 'transparent',
-                    '&:focus': {
-                      backgroundColor: '#ffebee', // Đảm bảo nền hồng nhạt khi focus
-                    },
-                  },
-                }}
+                sx={textFieldStyle}
               />
               <MuiTextField
                 label="Giá"
@@ -355,35 +325,7 @@ const RoomList = () => {
                 onChange={(e) => setRoomData({ ...roomData, price: e.target.value })}
                 fullWidth
                 style={{ marginBottom: '10px' }}
-                sx={{
-                  '& .MuiInputBase-root': {
-                    backgroundColor: '#ffffff', // Nền trắng mặc định
-                    WebkitTapHighlightColor: 'transparent', // Loại bỏ highlight mặc định trên trình duyệt
-                  },
-                  '& .MuiOutlinedInput-root': {
-                    '& fieldset': {
-                      borderColor: '#e0e0e0', // Viền xám nhạt mặc định
-                    },
-                    '&:hover fieldset': {
-                      borderColor: '#f48fb1', // Viền hồng khi hover
-                    },
-                    '&.Mui-focused': {
-                      '& .MuiInputBase-root': {
-                        backgroundColor: '#ffebee', // Nền hồng nhạt khi focus
-                      },
-                      '& fieldset': {
-                        borderColor: '#f06292', // Viền hồng đậm khi focus
-                      },
-                    },
-                  },
-                  // Loại bỏ hiệu ứng highlight của trình duyệt
-                  '& input': {
-                    WebkitTapHighlightColor: 'transparent',
-                    '&:focus': {
-                      backgroundColor: '#ffebee', // Đảm bảo nền hồng nhạt khi focus
-                    },
-                  },
-                }}
+                sx={textFieldStyle}
               />
               <MuiTextField
                 label="Mô tả"
@@ -393,35 +335,7 @@ const RoomList = () => {
                 multiline
                 rows={3}
                 style={{ marginBottom: '10px' }}
-                sx={{
-                  '& .MuiInputBase-root': {
-                    backgroundColor: '#ffffff', // Nền trắng mặc định
-                    WebkitTapHighlightColor: 'transparent', // Loại bỏ highlight mặc định trên trình duyệt
-                  },
-                  '& .MuiOutlinedInput-root': {
-                    '& fieldset': {
-                      borderColor: '#e0e0e0', // Viền xám nhạt mặc định
-                    },
-                    '&:hover fieldset': {
-                      borderColor: '#f48fb1', // Viền hồng khi hover
-                    },
-                    '&.Mui-focused': {
-                      '& .MuiInputBase-root': {
-                        backgroundColor: '#ffebee', // Nền hồng nhạt khi focus
-                      },
-                      '& fieldset': {
-                        borderColor: '#f06292', // Viền hồng đậm khi focus
-                      },
-                    },
-                  },
-                  // Loại bỏ hiệu ứng highlight của trình duyệt
-                  '& textarea': {
-                    WebkitTapHighlightColor: 'transparent',
-                    '&:focus': {
-                      backgroundColor: '#ffebee', // Đảm bảo nền hồng nhạt khi focus
-                    },
-                  },
-                }}
+                sx={descriptionFieldStyle}
               />
               <div style={{ marginBottom: '10px' }}>
                 <label>Ảnh đại diện:</label>

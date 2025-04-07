@@ -13,10 +13,11 @@ import RoomDetail from './pages/RoomDetail';
 import BookingManagement from './pages/BookingManagement';
 import BookingDetails from './pages/BookingDetails';
 import BookingPage from './pages/BookingPage';
-import ForgotPassword from './pages/ForgotPassword'; // Giữ nếu bạn có file này
-import ResetPassword from './pages/ResetPassword'; // Thêm import cho ResetPassword
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import HotelManagement from './HotelManagement';
 import EditProfile from './components/EditProfile';
+import PaymentResult from './pages/PaymentResult'; // Import PaymentResult
 
 function App() {
   const [isAdmin, setIsAdmin] = useState(null);
@@ -28,7 +29,8 @@ function App() {
     if (token) {
       try {
         const decoded = jwtDecode(token);
-        setIsAdmin(decoded.role?.toLowerCase() === 'admin');
+        const role = decoded.role || decoded.Role || 'user';
+        setIsAdmin(role.toLowerCase() === 'admin');
         setIsAuthenticated(true);
         if (location.pathname === '/login' || location.pathname === '/register') {
           navigate('/', { replace: true });
@@ -37,6 +39,8 @@ function App() {
         console.error('Error decoding token in App.js:', error);
         setIsAdmin(false);
         setIsAuthenticated(false);
+        localStorage.removeItem('token');
+        navigate('/login', { replace: true });
       }
     } else {
       setIsAdmin(false);
@@ -46,18 +50,25 @@ function App() {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    updateAdminStatus(token);
+    if (token) {
+      updateAdminStatus(token);
+    } else {
+      setIsAuthenticated(false);
+      setIsAdmin(false);
+    }
   }, [location.pathname]);
 
   const ProtectedRoute = ({ children }) => {
-    if (!isAuthenticated) {
+    const token = localStorage.getItem('token');
+    if (!token || !isAuthenticated) {
       return <Navigate to="/login" replace />;
     }
     return children;
   };
 
   const AdminRoute = ({ children }) => {
-    if (!isAuthenticated || !isAdmin) {
+    const token = localStorage.getItem('token');
+    if (!token || !isAuthenticated || !isAdmin) {
       return <Navigate to="/" replace />;
     }
     return children;
@@ -84,8 +95,8 @@ function App() {
               <Route path="/register" element={<Register />} />
               <Route path="/rooms" element={<RoomCardDisplay />} />
               <Route path="/room/:roomId" element={<RoomDetail />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} /> {/* Giữ nếu cần */}
-              <Route path="/reset-password" element={<ResetPassword />} /> {/* Thêm route mới */}
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route
                 path="/booking-details/:bookingId"
                 element={<ProtectedRoute><BookingDetails /></ProtectedRoute>}
@@ -105,6 +116,10 @@ function App() {
               <Route
                 path="/admin"
                 element={<AdminRoute><HotelManagement /></AdminRoute>}
+              />
+              <Route
+                path="/payment-result"
+                element={<PaymentResult />} // Thêm route cho PaymentResult
               />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

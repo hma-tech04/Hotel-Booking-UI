@@ -17,18 +17,8 @@ function RoomCardDisplay() {
     const fetchRooms = async () => {
       setLoading(true);
       try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          throw new Error("No authentication token found. Please log in.");
-        }
-
         const response = await axios.get(
-          `http://localhost:5053/api/rooms?pageNumber=${currentPage}&pageSize=${roomsPerPage}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
+          `http://localhost:5053/api/rooms?pageNumber=${currentPage}&pageSize=${roomsPerPage}`
         );
 
         const responseData = response.data.data;
@@ -40,11 +30,7 @@ function RoomCardDisplay() {
           throw new Error("Invalid data format from API");
         }
       } catch (err) {
-        setError(
-          err.response?.status === 401
-            ? "Unauthorized: Please log in to view rooms."
-            : "Failed to load rooms. Please check the API or console for details."
-        );
+        setError("Failed to load rooms. Please check the API or console for details.");
         console.error("Error fetching rooms:", err.response || err);
       } finally {
         setLoading(false);
@@ -54,12 +40,10 @@ function RoomCardDisplay() {
     fetchRooms();
   }, [currentPage]);
 
-  // Cập nhật searchTerm khi người dùng nhập
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
   };
 
-  // Gọi API khi nhấn Enter
   const handleKeyPress = async (e) => {
     if (e.key === "Enter" && searchTerm.trim()) {
       setLoading(true);
@@ -80,13 +64,12 @@ function RoomCardDisplay() {
             ? "No rooms found for this type."
             : "Failed to search rooms. Please try again."
         );
-        setFilteredRooms([]); // Reset filteredRooms nếu lỗi
+        setFilteredRooms([]);
         console.error("Error searching rooms:", err.response || err);
       } finally {
         setLoading(false);
       }
     } else if (e.key === "Enter" && !searchTerm.trim()) {
-      // Nếu ô tìm kiếm trống, hiển thị lại toàn bộ danh sách
       setFilteredRooms(rooms);
     }
   };

@@ -14,27 +14,35 @@ function Header({ isAdmin, updateAdminStatus }) {
   const dropdownRef = useRef(null);
 
   useEffect(() => {
-    console.log('Header useEffect, path:', location.pathname, 'token:', !!localStorage.getItem('token'));
     const token = localStorage.getItem('token');
     if (token && !isLoggedIn) {
       try {
         const decodedToken = jwtDecode(token);
+        console.log('Decoded token:', decodedToken);
+        const exp = decodedToken.exp * 1000; // Chuyển sang milliseconds
+        if (Date.now() >= exp) {
+          throw new Error('Token đã hết hạn');
+        }
         setIsLoggedIn(true);
-        const userId = decodedToken.id || decodedToken.sub || 1; // Lấy userId từ token hoặc mặc định là 1
-        fetchUserInfo(userId); // Gọi API để lấy thông tin đầy đủ
-        const userName = decodedToken.name || decodedToken.username || decodedToken.email || 'Unknown';
+        const userId = decodedToken.nameid;
+        if (!userId) {
+          throw new Error('Không tìm thấy nameid trong token');
+        }
+        if (!userInfo) { // Chỉ gọi API nếu chưa có userInfo
+          fetchUserInfo(userId);
+        }
+        const userName = decodedToken.given_name || decodedToken.username || decodedToken.email || 'Unknown';
         setUsername(isAdmin ? 'Admin' : userName);
-        setUserInfo(decodedToken); // Dữ liệu tạm từ token trong khi chờ API
+        setUserInfo(decodedToken);
         if (typeof updateAdminStatus === 'function') {
           updateAdminStatus(token);
-        } else {
-          console.error('updateAdminStatus is not a function in Header');
         }
       } catch (error) {
-        console.error('Error decoding token in Header:', error);
+        console.error('Error decoding token in Header:', error.message);
         setIsLoggedIn(false);
         setUsername('');
         setUserInfo(null);
+        localStorage.removeItem('token'); // Xóa token không hợp lệ
       }
     } else if (!token && isLoggedIn) {
       setIsLoggedIn(false);
@@ -42,26 +50,38 @@ function Header({ isAdmin, updateAdminStatus }) {
       setUserInfo(null);
       if (typeof updateAdminStatus === 'function') {
         updateAdminStatus(null);
-      } else {
-        console.error('updateAdminStatus is not a function in Header');
       }
     }
-  }, [isAdmin, isLoggedIn, location.pathname, updateAdminStatus]);
+  }, [isAdmin, isLoggedIn, updateAdminStatus]); // Xóa location.pathname khỏi dependencies nếu không cần
 
   const fetchUserInfo = async (userId) => {
     try {
       const response = await fetch(`http://localhost:5053/api/user/id/${userId}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
       });
+      if (!response.ok) {
+        const text = await response.text();
+        let errorMessage = 'Không thể lấy thông tin người dùng';
+        try {
+          const errorData = JSON.parse(text);
+          errorMessage = errorData.message || errorMessage;
+        } catch {
+          errorMessage = text || errorMessage;
+        }
+        throw new Error(`${errorMessage} (Status: ${response.status})`);
+      }
       const result = await response.json();
-      if (result.code === 200) {
-        setUserInfo(result.data); // Cập nhật userInfo từ API
-        setUsername(isAdmin ? 'Admin' : result.data.fullName); // Cập nhật username từ API
+      if (result.code === 200 && result.data) {
+        setUserInfo(result.data);
+        setUsername(isAdmin ? 'Admin' : result.data.fullName);
+      } else {
+        throw new Error(result.message || 'Dữ liệu trả về không hợp lệ');
       }
     } catch (error) {
-      console.error('Error fetching user info:', error);
+      console.error('Failed to fetch user info:', error.message);
+      setUserInfo(null); // Đặt lại userInfo nếu API thất bại
     }
   };
 
@@ -91,13 +111,11 @@ function Header({ isAdmin, updateAdminStatus }) {
     localStorage.removeItem('token');
     if (typeof updateAdminStatus === 'function') {
       updateAdminStatus(null);
-    } else {
-      console.error('updateAdminStatus is not a function in handleLogout');
     }
     navigate('/', { replace: true });
   };
 
-  const isAdminRoute = location.pathname.startsWith('/admin') || location.pathname.startsWith('/booking-management');
+  const isAdminRoute = location.pathname.startsWith('/admin');
   if (isAdminRoute) {
     return null;
   }
@@ -114,9 +132,7 @@ function Header({ isAdmin, updateAdminStatus }) {
             <li><Link to="/rooms" className="nav-link">Rooms</Link></li>
             {isAdmin && (
               <li>
-                <Link to="/admin" className="nav-link">
-                  Admin
-                </Link>
+                <Link to="/admin" className="nav-link">Admin</Link>
               </li>
             )}
           </ul>
@@ -152,7 +168,7 @@ function Header({ isAdmin, updateAdminStatus }) {
                           <li>User ID: {userInfo.userId || 'Not available'}</li>
                           <li>Full Name: {userInfo.fullName || 'Not available'}</li>
                           <li>Email: {userInfo.email}</li>
-                          <li>Phone: {userInfo.phoneNumber || userInfo.phone || 'Not set'}</li>
+                          <li>Phone: {userInfo.phoneNumber || 'Not set'}</li>
                           <li>Role: {userInfo.role || 'Not available'}</li>
                           <li>Created: {userInfo.createdDate ? new Date(userInfo.createdDate).toLocaleDateString() : 'Not available'}</li>
                           <li>

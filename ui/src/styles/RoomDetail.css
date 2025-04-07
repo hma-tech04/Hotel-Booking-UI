@@ -12,6 +12,13 @@
   display: flex;
   gap: 30px;
   flex-wrap: wrap;
+  justify-content: space-between; /* Đảm bảo các phần được căn đều */
+}
+
+/* Container cho phần hình ảnh */
+.room-images {
+  flex: 1; /* Chiếm 50% chiều rộng */
+  min-width: 0; /* Ngăn phần tử bị tràn khi co nhỏ */
 }
 
 /* Container cho ảnh chính */
@@ -72,7 +79,8 @@
 
 /* Room info */
 .room-info {
-  flex: 1;
+  flex: 1; /* Chiếm 50% chiều rộng */
+  min-width: 0; /* Ngăn phần tử bị tràn khi co nhỏ */
   padding: 30px;
   background-color: #ffffff;
   border-radius: 10px;
@@ -124,7 +132,8 @@
   gap: 15px;
 }
 
-.book-now-btn, .payment-btn {
+.book-now-btn,
+.payment-btn {
   padding: 12px 25px;
   background-color: #e67e22;
   color: white;
@@ -135,7 +144,8 @@
   font-weight: 500;
 }
 
-.book-now-btn:hover, .payment-btn:hover {
+.book-now-btn:hover,
+.payment-btn:hover {
   background-color: #d35400;
 }
 
@@ -147,4 +157,17 @@
   text-align: center;
   border-radius: 10px;
   margin-top: 40px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .room-detail {
+    flex-direction: column; /* Chuyển thành cột khi màn hình nhỏ */
+  }
+  
+  .room-images,
+  .room-info {
+    flex: none; /* Hủy chia đều khi ở chế độ cột */
+    width: 100%; /* Chiếm toàn bộ chiều rộng */
+  }
 }

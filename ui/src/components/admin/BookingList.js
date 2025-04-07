@@ -1,5 +1,4 @@
-// src/components/admin/BookingList.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Button as MuiButton,
   Dialog,
@@ -13,7 +12,7 @@ import {
   TableHead,
   TableRow,
 } from '@mui/material';
-import { mockBookings } from './mockData';
+import axios from 'axios';
 
 const BookingList = () => {
   const [openDialog, setOpenDialog] = useState(false);
@@ -22,18 +21,78 @@ const BookingList = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [filteredBookings, setFilteredBookings] = useState([]);
   const [action, setAction] = useState('');
-  const [bookings, setBookings] = useState(mockBookings);
+  const [bookings, setBookings] = useState([]);
+  const [error, setError] = useState(null);
+
+  // Fetch all bookings on mount
+  useEffect(() => {
+    const fetchBookings = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) throw new Error('No authentication token found. Please log in.');
+
+        const response = await axios.get('http://localhost:5053/api/bookings', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const bookingData = response.data.data;
+        console.log('Fetched bookings:', bookingData);
+        if (Array.isArray(bookingData)) {
+          setBookings(bookingData);
+        } else {
+          throw new Error('Invalid data format from API');
+        }
+      } catch (err) {
+        setError(
+          err.response?.status === 401
+            ? 'Unauthorized: Please log in as admin.'
+            : 'Failed to load bookings. Please check the API or console for details.'
+        );
+        console.error('Error fetching bookings:', err.response || err);
+      }
+    };
+    fetchBookings();
+  }, []);
 
   // Handle Cancel Booking
-  const handleCancelBooking = (bookingId) => {
-    if (window.confirm('Bạn có chắc muốn hủy đặt phòng này?')) {
-      const updatedBookings = bookings.map((booking) =>
-        booking.id === bookingId
-          ? { ...booking, status: 'Cancelled' }
-          : booking
-      );
-      setBookings(updatedBookings);
-      alert('Đặt phòng đã được hủy thành công!');
+  const handleCancelBooking = async (bookingId) => {
+    if (!bookingId) {
+      setError('Booking ID is undefined. Please check the booking data.');
+      return;
+    }
+
+    if (window.confirm('Bạn có chắc chắn muốn hủy đặt phòng này không?')) {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) throw new Error('No authentication token found.');
+
+        const response = await axios.put(
+          `http://localhost:5053/api/bookings/${bookingId}/cancel`,
+          null,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+
+        if (response.data.data) {
+          const updatedBookings = bookings.map((booking) =>
+            booking.bookingId === bookingId ? { ...booking, bookingStatus: 'Cancelled' } : booking
+          );
+          setBookings(updatedBookings);
+          alert('Đặt phòng đã được hủy thành công!');
+        }
+      } catch (err) {
+        const errorMessage = err.response?.data?.message || 'Failed to cancel booking.';
+        setError(
+          err.response?.status === 401
+            ? 'Unauthorized: You must be an admin to cancel a booking.'
+            : errorMessage
+        );
+        console.error('Error details:', err.response || err);
+      }
     }
   };
 
@@ -48,16 +107,15 @@ const BookingList = () => {
     setSelectedBooking(null);
   };
 
-  // Mock payment history (có thể thay bằng dữ liệu thực tế sau này)
+  // Mock payment history
   const getPaymentHistory = (booking) => {
     return [
       {
-        id: `PAY-${booking.id}-001`,
+        id: `PAY-${booking.bookingId}-001`,
         date: new Date().toLocaleDateString(),
         amount: booking.totalPrice,
-        status: booking.status === 'Checked-in' ? 'Paid' : 'Pending',
+        status: booking.bookingStatus === 'Checked-in' ? 'Paid' : 'Pending',
       },
-      // Có thể thêm các bản ghi khác ở đây trong tương lai
     ];
   };
 
@@ -66,24 +124,90 @@ const BookingList = () => {
     setOpenDialog(true);
   };
 
-  const handleSearch = () => {
-    const filtered = bookings.filter((booking) => booking.phoneNumber === phoneNumber);
-    setFilteredBookings(filtered);
-    if (filtered.length > 0) setSelectedBooking(filtered[0]);
+  // Search unchecked bookings by phone number
+  const handleSearch = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) throw new Error('No authentication token found.');
+
+      const response = await axios.post(
+        'http://localhost:5053/api/admin/bookings/unchecked',
+        { PhoneNumber: phoneNumber },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      const filteredData = response.data.data;
+      if (Array.isArray(filteredData) && filteredData.length > 0) {
+        // Lọc thêm cho Check-out: chỉ giữ booking đã Checked-in
+        const filteredForAction =
+          action === 'checkout'
+            ? filteredData.filter((booking) => booking.bookingStatus === 'Checked-in')
+            : filteredData; // Check-in giữ nguyên toàn bộ
+        setFilteredBookings(filteredForAction);
+        if (filteredForAction.length === 0) {
+          alert(
+            action === 'checkout'
+              ? 'Không tìm thấy phòng đã check-in với số điện thoại này!'
+              : 'Không tìm thấy đặt phòng chưa check-in với số điện thoại này!'
+          );
+        }
+      } else {
+        setFilteredBookings([]);
+        alert(
+          action === 'checkout'
+            ? 'Không tìm thấy phòng đã check-in với số điện thoại này!'
+            : 'Không tìm thấy đặt phòng chưa check-in với số điện thoại này!'
+        );
+      }
+    } catch (err) {
+      setError(
+        err.response?.status === 401
+          ? 'Unauthorized: You must be an admin to search bookings.'
+          : err.response?.data?.message || 'Failed to search bookings.'
+      );
+      console.error('Error searching bookings:', err.response || err);
+    }
   };
 
-  const handleConfirmAction = () => {
-    if (selectedBooking) {
-      const updatedBookings = bookings.map((booking) =>
-        booking.id === selectedBooking.id
-          ? { ...booking, status: action === 'checkin' ? 'Checked-in' : 'Checked-out' }
-          : booking
+  // Handle Confirm Action for a specific booking
+  const handleConfirmAction = async (booking) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) throw new Error('No authentication token found.');
+
+      const endpoint =
+        action === 'checkin'
+          ? `http://localhost:5053/api/bookings/check-in/${booking.bookingId}`
+          : `http://localhost:5053/api/bookings/check-out/${booking.bookingId}`;
+
+      const response = await axios.post(endpoint, null, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.data.data) {
+        const updatedBookings = bookings.map((b) =>
+          b.bookingId === booking.bookingId
+            ? { ...b, bookingStatus: action === 'checkin' ? 'Checked-in' : 'Checked-out' }
+            : b
+        );
+        setBookings(updatedBookings);
+        setFilteredBookings(filteredBookings.filter((b) => b.bookingId !== booking.bookingId)); // Xóa booking đã xử lý
+        alert(
+          `${action === 'checkin' ? 'Checked-in' : 'Checked-out'} thành công cho booking: ${booking.userId}`
+        );
+      }
+    } catch (err) {
+      setError(
+        err.response?.status === 401
+          ? 'Unauthorized: You must be an admin to perform this action.'
+          : 'Failed to process action.'
       );
-      setBookings(updatedBookings);
-      alert(`${action === 'checkin' ? 'Checked-in' : 'Checked-out'}: ${selectedBooking.userName}`);
-      handleCloseDialog();
-    } else {
-      alert('Không tìm thấy đặt phòng phù hợp!');
+      console.error('Error processing action:', err.response || err);
     }
   };
 
@@ -96,6 +220,7 @@ const BookingList = () => {
 
   return (
     <div style={{ padding: '20px', width: '100%' }}>
+      {error && <div style={{ color: 'red', marginBottom: '20px' }}>{error}</div>}
       <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'center' }}>
         <MuiButton
           variant="contained"
@@ -117,8 +242,8 @@ const BookingList = () => {
       <Table sx={{ width: '100%' }}>
         <TableHead>
           <TableRow>
-            <TableCell>Loại phòng</TableCell>
-            <TableCell>Người dùng</TableCell>
+            <TableCell>Mã phòng</TableCell>
+            <TableCell>Mã khách hàng</TableCell>
             <TableCell>Ngày nhận phòng</TableCell>
             <TableCell>Ngày trả phòng</TableCell>
             <TableCell>Tổng giá</TableCell>
@@ -128,20 +253,20 @@ const BookingList = () => {
         </TableHead>
         <TableBody>
           {bookings.map((booking) => (
-            <TableRow key={booking.id}>
-              <TableCell>{booking.roomType}</TableCell>
-              <TableCell>{booking.userName}</TableCell>
-              <TableCell>{booking.checkInDate}</TableCell>
-              <TableCell>{booking.checkOutDate}</TableCell>
-              <TableCell>{booking.totalPrice}</TableCell>
-              <TableCell>{booking.status || 'Pending'}</TableCell>
+            <TableRow key={booking.bookingId}>
+              <TableCell>{booking.roomId || 'N/A'}</TableCell>
+              <TableCell>{booking.userId || 'N/A'}</TableCell>
+              <TableCell>{booking.checkInDate || 'N/A'}</TableCell>
+              <TableCell>{booking.checkOutDate || 'N/A'}</TableCell>
+              <TableCell>{booking.totalPrice || 'N/A'}</TableCell>
+              <TableCell>{booking.bookingStatus || 'Pending'}</TableCell>
               <TableCell>
                 <MuiButton
                   variant="outlined"
                   color="error"
                   size="small"
-                  onClick={() => handleCancelBooking(booking.id)}
-                  disabled={booking.status === 'Cancelled'}
+                  onClick={() => handleCancelBooking(booking.bookingId)}
+                  disabled={booking.bookingStatus === 'Cancelled'}
                   style={{ marginRight: '5px' }}
                 >
                   Hủy
@@ -160,8 +285,7 @@ const BookingList = () => {
         </TableBody>
       </Table>
 
-      {/* Dialog for Check-in/Check-out */}
-      <Dialog open={openDialog} onClose={handleCloseDialog}>
+      <Dialog open={openDialog} onClose={handleCloseDialog} sx={{ '& .MuiDialog-paper': { minWidth: '800px' } }}>
         <DialogTitle>
           Nhập số điện thoại để {action === 'checkin' ? 'Check-in' : 'Check-out'}
         </DialogTitle>
@@ -171,7 +295,43 @@ const BookingList = () => {
             value={phoneNumber}
             onChange={(e) => setPhoneNumber(e.target.value)}
             fullWidth
+            style={{ marginTop: '10px', marginBottom: '20px' }}
           />
+          {filteredBookings.length > 0 && (
+            <Table sx={{ minWidth: 750 }}>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Mã phòng</TableCell>
+                  <TableCell>Mã khách hàng</TableCell>
+                  <TableCell>Ngày nhận phòng</TableCell>
+                  <TableCell>Ngày trả phòng</TableCell>
+                  <TableCell>Tổng giá</TableCell>
+                  <TableCell>Hành động</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {filteredBookings.map((booking) => (
+                  <TableRow key={booking.bookingId}>
+                    <TableCell>{booking.roomId || 'N/A'}</TableCell>
+                    <TableCell>{booking.userId || 'N/A'}</TableCell>
+                    <TableCell>{booking.checkInDate || 'N/A'}</TableCell>
+                    <TableCell>{booking.checkOutDate || 'N/A'}</TableCell>
+                    <TableCell>{booking.totalPrice || 'N/A'}</TableCell>
+                    <TableCell>
+                      <MuiButton
+                        variant="contained"
+                        color="primary"
+                        size="small"
+                        onClick={() => handleConfirmAction(booking)}
+                      >
+                        {action === 'checkin' ? 'Xác nhận Check-in' : 'Xác nhận Check-out'}
+                      </MuiButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </DialogContent>
         <DialogActions>
           <MuiButton onClick={handleCloseDialog}>Hủy</MuiButton>
@@ -179,34 +339,13 @@ const BookingList = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Dialog for Search Results */}
-      {filteredBookings.length > 0 && (
-        <Dialog open={true} onClose={handleCloseDialog}>
-          <DialogTitle>Thông tin đặt phòng</DialogTitle>
-          <DialogContent>
-            <p>Loại phòng: {filteredBookings[0].roomType}</p>
-            <p>Người dùng: {filteredBookings[0].userName}</p>
-            <p>Ngày nhận phòng: {filteredBookings[0].checkInDate}</p>
-            <p>Ngày trả phòng: {filteredBookings[0].checkOutDate}</p>
-            <p>Tổng giá: ${filteredBookings[0].totalPrice}</p>
-          </DialogContent>
-          <DialogActions>
-            <MuiButton onClick={handleCloseDialog}>Hủy</MuiButton>
-            <MuiButton onClick={handleConfirmAction} color="primary">
-              {action === 'checkin' ? 'Xác nhận Check-in' : 'Xác nhận Check-out'}
-            </MuiButton>
-          </DialogActions>
-        </Dialog>
-      )}
-
-      {/* Payment History Dialog with Larger Size */}
       {paymentDialog && selectedBooking && (
         <Dialog
           open={paymentDialog}
           onClose={handleClosePaymentDialog}
-          sx={{ '& .MuiDialog-paper': { minWidth: '800px' } }} // Tăng gấp đôi kích thước
+          sx={{ '& .MuiDialog-paper': { minWidth: '800px' } }}
         >
-          <DialogTitle>Lịch sử thanh toán - {selectedBooking.id}</DialogTitle>
+          <DialogTitle>Lịch sử thanh toán - {selectedBooking.bookingId}</DialogTitle>
           <DialogContent>
             <Table sx={{ minWidth: 750 }}>
               <TableHead>
