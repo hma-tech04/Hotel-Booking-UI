@@ -1,6 +1,4 @@
-// src/components/admin/RevenueStatistics.js
 import React, { useState } from 'react';
-import { mockBookings } from './mockData';
 import {
   Card,
   CardContent,
@@ -15,9 +13,11 @@ import {
   TableRow,
   Box,
   Paper,
+  CircularProgress,
 } from '@mui/material';
 import { styled } from '@mui/system';
 
+// Giao diện giữ nguyên
 const StyledCard = styled(Card)(({ theme }) => ({
   background: 'linear-gradient(135deg, #ffffff 0%, #e3f2fd 100%)',
   borderRadius: '12px',
@@ -46,10 +46,11 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
 
 const RevenueStatistics = () => {
   const [totalRevenue, setTotalRevenue] = useState(0);
-  const [bookingCount, setBookingCount] = useState(0);
   const [selectedMonth, setSelectedMonth] = useState('');
   const [selectedYear, setSelectedYear] = useState('');
   const [displayMonthYear, setDisplayMonthYear] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleMonthChange = (e) => {
     setSelectedMonth(e.target.value);
@@ -59,37 +60,71 @@ const RevenueStatistics = () => {
     setSelectedYear(e.target.value);
   };
 
-  const handleCalculateRevenue = () => {
-    // Kiểm tra tính hợp lệ của tháng và năm
+  const handleCalculateRevenue = async () => {
+    setError('');
+    setTotalRevenue(0);
+    setDisplayMonthYear('');
+
     const month = parseInt(selectedMonth, 10);
     const year = parseInt(selectedYear, 10);
 
+    // Kiểm tra input
     if (!selectedMonth || !selectedYear) {
-      alert('Vui lòng nhập cả tháng và năm');
+      setError('Vui lòng nhập cả tháng và năm');
       return;
     }
 
     if (isNaN(month) || month < 1 || month > 12) {
-      alert('Vui lòng nhập tháng từ 1 đến 12');
+      setError('Vui lòng nhập tháng từ 1 đến 12');
       return;
     }
 
     if (isNaN(year) || year < 2020 || year > 2030) {
-      alert('Vui lòng nhập năm từ 2020 đến 2030');
+      setError('Vui lòng nhập năm từ 2020 đến 2030');
       return;
     }
 
-    const filteredBookings = mockBookings.filter((booking) => {
-      const bookingDate = new Date(booking.checkInDate);
-      const bookingMonth = bookingDate.getMonth() + 1; // getMonth() trả về 0-11, nên +1
-      const bookingYear = bookingDate.getFullYear();
-      return bookingMonth === month && bookingYear === year;
-    });
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Không tìm thấy token trong localStorage. Vui lòng đăng nhập lại.');
+      }
 
-    const revenue = filteredBookings.reduce((acc, booking) => acc + booking.totalPrice, 0);
-    setTotalRevenue(revenue);
-    setBookingCount(filteredBookings.length);
-    setDisplayMonthYear(`${month}/${year}`);
+      // Sử dụng POST và gửi dữ liệu trong body
+      const url = `http://localhost:5053/api/admin/statistics/revenue/month`;
+      const response = await fetch(url, {
+        method: 'POST', // Đổi sang POST
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`, // Token từ localStorage với key 'token'
+        },
+        body: JSON.stringify({
+          Month: month, // Viết hoa để khớp với DTO
+          Year: year,   // Viết hoa để khớp với DTO
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(
+          `Failed to fetch revenue data. Status: ${response.status}, Message: ${errorText || 'No additional error message'}`
+        );
+      }
+
+      const data = await response.json();
+      if (data.code === 200) {
+        setTotalRevenue(data.data.revenue || 0);
+        setDisplayMonthYear(`${month}/${year}`);
+      } else {
+        throw new Error(`API returned an error: ${data.message || 'Unknown error'}`);
+      }
+    } catch (err) {
+      setError('Có lỗi xảy ra khi lấy dữ liệu: ' + err.message);
+      console.error('API Error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -145,6 +180,7 @@ const RevenueStatistics = () => {
             color="primary"
             fullWidth
             onClick={handleCalculateRevenue}
+            disabled={loading}
             sx={{
               height: '60px',
               borderRadius: '8px',
@@ -154,7 +190,7 @@ const RevenueStatistics = () => {
               fontSize: '1.1rem',
             }}
           >
-            Tính Doanh thu
+            {loading ? <CircularProgress size={24} color="inherit" /> : 'Tính Doanh thu'}
           </Button>
         </Grid>
       </Grid>
@@ -172,14 +208,17 @@ const RevenueStatistics = () => {
             Kết quả Thống kê
           </Typography>
 
-          {totalRevenue > 0 || bookingCount > 0 ? (
+          {error ? (
+            <Typography variant="h6" sx={{ color: '#f44336', marginTop: '20px' }}>
+              {error}
+            </Typography>
+          ) : totalRevenue > 0 ? (
             <Paper elevation={3} sx={{ borderRadius: '8px', overflow: 'hidden' }}>
               <Table>
                 <TableHead>
                   <TableRow>
                     <StyledTableCell>Tháng/Năm</StyledTableCell>
                     <StyledTableCell>Tổng Doanh thu</StyledTableCell>
-                    <StyledTableCell>Số lượng Đặt phòng</StyledTableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -188,16 +227,12 @@ const RevenueStatistics = () => {
                     <TableCell sx={{ color: '#d32f2f', fontWeight: 'bold' }}>
                       ${totalRevenue.toLocaleString()}
                     </TableCell>
-                    <TableCell>{bookingCount}</TableCell>
                   </StyledTableRow>
                 </TableBody>
               </Table>
             </Paper>
           ) : (
-            <Typography
-              variant="h6"
-              sx={{ color: '#f44336', marginTop: '20px' }}
-            >
+            <Typography variant="h6" sx={{ color: '#f44336', marginTop: '20px' }}>
               Không có dữ liệu doanh thu cho tháng và năm này.
             </Typography>
           )}

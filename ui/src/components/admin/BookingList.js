@@ -22,11 +22,12 @@ const BookingList = () => {
   const [filteredBookings, setFilteredBookings] = useState([]);
   const [action, setAction] = useState('');
   const [bookings, setBookings] = useState([]);
+  const [paymentHistory, setPaymentHistory] = useState([]);
+  const [bookingPaymentStatuses, setBookingPaymentStatuses] = useState({});
   const [error, setError] = useState(null);
 
-  // Fetch all bookings on mount
   useEffect(() => {
-    const fetchBookings = async () => {
+    const fetchBookingsAndPaymentStatuses = async () => {
       try {
         const token = localStorage.getItem('token');
         if (!token) throw new Error('No authentication token found. Please log in.');
@@ -39,6 +40,47 @@ const BookingList = () => {
         console.log('Fetched bookings:', bookingData);
         if (Array.isArray(bookingData)) {
           setBookings(bookingData);
+
+          const paymentStatuses = {};
+          for (const booking of bookingData) {
+            switch (booking.bookingStatus) {
+              case 'Cancelled':
+                paymentStatuses[booking.bookingId] = 'Đã hủy đặt phòng';
+                continue;
+              case 'Completed':
+                paymentStatuses[booking.bookingId] = 'Đã hoàn thành';
+                continue;
+              case 'Confirmed':
+                paymentStatuses[booking.bookingId] = 'Đã xác nhận';
+                break;
+              case 'Pending':
+                paymentStatuses[booking.bookingId] = 'Đang chờ xử lý';
+                break;
+              default:
+                paymentStatuses[booking.bookingId] = '';
+                continue;
+            }
+
+            if (booking.paymentId && (booking.bookingStatus === 'Pending' || booking.bookingStatus === 'Confirmed')) {
+              try {
+                const paymentResponse = await axios.get(
+                  `http://localhost:5053/api/payment/booking/${booking.bookingId}`,
+                  {
+                    headers: { Authorization: `Bearer ${token}` },
+                  }
+                );
+                const paymentData = paymentResponse.data.data || [];
+                console.log(`Payment data for booking ${booking.bookingId}:`, paymentData);
+                paymentStatuses[booking.bookingId] = determineCombinedStatus(booking.bookingStatus, paymentData);
+              } catch (err) {
+                console.error(`Error fetching payment status for booking ${booking.bookingId}:`, err);
+                paymentStatuses[booking.bookingId] = `${paymentStatuses[booking.bookingId]} (Chưa thanh toán)`;
+              }
+            } else if (!booking.paymentId && (booking.bookingStatus === 'Pending' || booking.bookingStatus === 'Confirmed')) {
+              paymentStatuses[booking.bookingId] = `${paymentStatuses[booking.bookingId]} (Chưa thanh toán)`;
+            }
+          }
+          setBookingPaymentStatuses(paymentStatuses);
         } else {
           throw new Error('Invalid data format from API');
         }
@@ -51,10 +93,9 @@ const BookingList = () => {
         console.error('Error fetching bookings:', err.response || err);
       }
     };
-    fetchBookings();
+    fetchBookingsAndPaymentStatuses();
   }, []);
 
-  // Handle Cancel Booking
   const handleCancelBooking = async (bookingId) => {
     if (!bookingId) {
       setError('Booking ID is undefined. Please check the booking data.');
@@ -82,6 +123,10 @@ const BookingList = () => {
             booking.bookingId === bookingId ? { ...booking, bookingStatus: 'Cancelled' } : booking
           );
           setBookings(updatedBookings);
+          setBookingPaymentStatuses((prev) => ({
+            ...prev,
+            [bookingId]: 'Đã hủy đặt phòng',
+          }));
           alert('Đặt phòng đã được hủy thành công!');
         }
       } catch (err) {
@@ -96,27 +141,82 @@ const BookingList = () => {
     }
   };
 
-  // Handle View Payment Status
-  const handleViewPayment = (booking) => {
+  const handleViewPayment = async (booking) => {
     setSelectedBooking(booking);
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) throw new Error('No authentication token found.');
+
+      const response = await axios.get(`http://localhost:5053/api/payment/booking/${booking.bookingId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const paymentData = response.data.data;
+      if (Array.isArray(paymentData) && paymentData.length > 0) {
+        setPaymentHistory(paymentData);
+      } else {
+        setPaymentHistory([]);
+      }
+    } catch (err) {
+      setError(
+        err.response?.status === 401
+          ? 'Unauthorized: Please log in to view payment status.'
+          : 'Failed to load payment status. Please check the API or console for details.'
+      );
+      console.error('Error fetching payment status:', err.response || err);
+    }
     setPaymentDialog(true);
   };
 
   const handleClosePaymentDialog = () => {
     setPaymentDialog(false);
     setSelectedBooking(null);
+    setPaymentHistory([]);
   };
 
-  // Mock payment history
-  const getPaymentHistory = (booking) => {
-    return [
-      {
-        id: `PAY-${booking.bookingId}-001`,
-        date: new Date().toLocaleDateString(),
-        amount: booking.totalPrice,
-        status: booking.bookingStatus === 'Checked-in' ? 'Paid' : 'Pending',
-      },
-    ];
+  const getPaymentStatusText = (status) => {
+    switch (status) {
+      case 'Pending':
+        return 'Chưa thanh toán';
+      case 'Completed':
+        return 'Đã thanh toán';
+      case 'Failed':
+        return 'Thất bại';
+      case 'Cancelled':
+        return 'Thanh toán bị hủy';
+      default:
+        return '';
+    }
+  };
+
+  const determineCombinedStatus = (bookingStatus, paymentHistory) => {
+    if (bookingStatus === 'Cancelled') return 'Đã hủy đặt phòng';
+    if (bookingStatus === 'Completed') return 'Đã hoàn thành';
+
+    if (paymentHistory.length === 0) {
+      return bookingStatus === 'Pending' ? 'Đang chờ xử lý (Chưa thanh toán)' : 'Đã xác nhận (Chưa thanh toán)';
+    }
+
+    const latestPayment = paymentHistory[paymentHistory.length - 1];
+    const paymentStatusText = getPaymentStatusText(latestPayment.status);
+
+    if (!paymentStatusText) {
+      return bookingStatus === 'Pending' ? 'Đang chờ xử lý' : 'Đã xác nhận';
+    }
+
+    return bookingStatus === 'Pending'
+      ? `Đang chờ xử lý (${paymentStatusText})`
+      : `Đã xác nhận (${paymentStatusText})`;
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
   };
 
   const handleOpenDialog = (actionType) => {
@@ -124,15 +224,19 @@ const BookingList = () => {
     setOpenDialog(true);
   };
 
-  // Search unchecked bookings by phone number
   const handleSearch = async () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('No authentication token found.');
 
+      const endpoint =
+        action === 'checkout'
+          ? 'http://localhost:5053/api/admin/bookings/uncheckedout'
+          : 'http://localhost:5053/api/admin/bookings/unchecked';
+
       const response = await axios.post(
-        'http://localhost:5053/api/admin/bookings/unchecked',
-        { PhoneNumber: phoneNumber },
+        endpoint,
+        { PhoneNumber: phoneNumber }, // Capitalized "PhoneNumber"
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -143,25 +247,24 @@ const BookingList = () => {
 
       const filteredData = response.data.data;
       if (Array.isArray(filteredData) && filteredData.length > 0) {
-        // Lọc thêm cho Check-out: chỉ giữ booking đã Checked-in
         const filteredForAction =
           action === 'checkout'
-            ? filteredData.filter((booking) => booking.bookingStatus === 'Checked-in')
-            : filteredData; // Check-in giữ nguyên toàn bộ
+            ? filteredData.filter((booking) => booking.bookingStatus === 'Confirmed')
+            : filteredData.filter((booking) => booking.bookingStatus === 'Pending');
         setFilteredBookings(filteredForAction);
         if (filteredForAction.length === 0) {
           alert(
             action === 'checkout'
-              ? 'Không tìm thấy phòng đã check-in với số điện thoại này!'
-              : 'Không tìm thấy đặt phòng chưa check-in với số điện thoại này!'
+              ? 'Không tìm thấy phòng đã xác nhận với số điện thoại này!'
+              : 'Không tìm thấy đặt phòng đang chờ xử lý với số điện thoại này!'
           );
         }
       } else {
         setFilteredBookings([]);
         alert(
           action === 'checkout'
-            ? 'Không tìm thấy phòng đã check-in với số điện thoại này!'
-            : 'Không tìm thấy đặt phòng chưa check-in với số điện thoại này!'
+            ? 'Không tìm thấy phòng đã xác nhận với số điện thoại này!'
+            : 'Không tìm thấy đặt phòng đang chờ xử lý với số điện thoại này!'
         );
       }
     } catch (err) {
@@ -174,7 +277,6 @@ const BookingList = () => {
     }
   };
 
-  // Handle Confirm Action for a specific booking
   const handleConfirmAction = async (booking) => {
     try {
       const token = localStorage.getItem('token');
@@ -192,11 +294,16 @@ const BookingList = () => {
       if (response.data.data) {
         const updatedBookings = bookings.map((b) =>
           b.bookingId === booking.bookingId
-            ? { ...b, bookingStatus: action === 'checkin' ? 'Checked-in' : 'Checked-out' }
+            ? {
+                ...b,
+                bookingStatus: action === 'checkin' ? 'Confirmed' : 'Completed',
+                actualCheckInTime: action === 'checkin' ? new Date().toISOString() : b.actualCheckInTime,
+                actualCheckOutTime: action === 'checkout' ? new Date().toISOString() : b.actualCheckOutTime,
+              }
             : b
         );
         setBookings(updatedBookings);
-        setFilteredBookings(filteredBookings.filter((b) => b.bookingId !== booking.bookingId)); // Xóa booking đã xử lý
+        setFilteredBookings(filteredBookings.filter((b) => b.bookingId !== booking.bookingId));
         alert(
           `${action === 'checkin' ? 'Checked-in' : 'Checked-out'} thành công cho booking: ${booking.userId}`
         );
@@ -204,7 +311,7 @@ const BookingList = () => {
     } catch (err) {
       setError(
         err.response?.status === 401
-          ? 'Unauthorized: You must be an admin to perform this action.'
+          ? 'Unauthorized: You must be an admin to perform bromis action.'
           : 'Failed to process action.'
       );
       console.error('Error processing action:', err.response || err);
@@ -246,7 +353,7 @@ const BookingList = () => {
             <TableCell>Mã khách hàng</TableCell>
             <TableCell>Ngày nhận phòng</TableCell>
             <TableCell>Ngày trả phòng</TableCell>
-            <TableCell>Tổng giá</TableCell>
+            <TableCell>Ngày giờ nhận phòng thực tế</TableCell>
             <TableCell>Trạng thái</TableCell>
             <TableCell>Hành động</TableCell>
           </TableRow>
@@ -256,10 +363,10 @@ const BookingList = () => {
             <TableRow key={booking.bookingId}>
               <TableCell>{booking.roomId || 'N/A'}</TableCell>
               <TableCell>{booking.userId || 'N/A'}</TableCell>
-              <TableCell>{booking.checkInDate || 'N/A'}</TableCell>
-              <TableCell>{booking.checkOutDate || 'N/A'}</TableCell>
-              <TableCell>{booking.totalPrice || 'N/A'}</TableCell>
-              <TableCell>{booking.bookingStatus || 'Pending'}</TableCell>
+              <TableCell>{booking.checkInDate ? formatDate(booking.checkInDate) : 'N/A'}</TableCell>
+              <TableCell>{booking.checkOutDate ? formatDate(booking.checkOutDate) : 'N/A'}</TableCell>
+              <TableCell>{booking.actualCheckInTime ? formatDate(booking.actualCheckInTime) : 'N/A'}</TableCell>
+              <TableCell>{bookingPaymentStatuses[booking.bookingId] || ''}</TableCell>
               <TableCell>
                 <MuiButton
                   variant="outlined"
@@ -305,7 +412,7 @@ const BookingList = () => {
                   <TableCell>Mã khách hàng</TableCell>
                   <TableCell>Ngày nhận phòng</TableCell>
                   <TableCell>Ngày trả phòng</TableCell>
-                  <TableCell>Tổng giá</TableCell>
+                  <TableCell>Ngày giờ nhận phòng thực tế</TableCell>
                   <TableCell>Hành động</TableCell>
                 </TableRow>
               </TableHead>
@@ -314,9 +421,9 @@ const BookingList = () => {
                   <TableRow key={booking.bookingId}>
                     <TableCell>{booking.roomId || 'N/A'}</TableCell>
                     <TableCell>{booking.userId || 'N/A'}</TableCell>
-                    <TableCell>{booking.checkInDate || 'N/A'}</TableCell>
-                    <TableCell>{booking.checkOutDate || 'N/A'}</TableCell>
-                    <TableCell>{booking.totalPrice || 'N/A'}</TableCell>
+                    <TableCell>{booking.checkInDate ? formatDate(booking.checkInDate) : 'N/A'}</TableCell>
+                    <TableCell>{booking.checkOutDate ? formatDate(booking.checkOutDate) : 'N/A'}</TableCell>
+                    <TableCell>{booking.actualCheckInTime ? formatDate(booking.actualCheckInTime) : 'N/A'}</TableCell>
                     <TableCell>
                       <MuiButton
                         variant="contained"
@@ -345,28 +452,34 @@ const BookingList = () => {
           onClose={handleClosePaymentDialog}
           sx={{ '& .MuiDialog-paper': { minWidth: '800px' } }}
         >
-          <DialogTitle>Lịch sử thanh toán - {selectedBooking.bookingId}</DialogTitle>
+          <DialogTitle>Chi tiết thanh toán – {selectedBooking.bookingId}</DialogTitle>
           <DialogContent>
-            <Table sx={{ minWidth: 750 }}>
-              <TableHead>
-                <TableRow>
-                  <TableCell>ID Thanh toán</TableCell>
-                  <TableCell>Ngày</TableCell>
-                  <TableCell>Số tiền</TableCell>
-                  <TableCell>Trạng thái</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {getPaymentHistory(selectedBooking).map((payment) => (
-                  <TableRow key={payment.id}>
-                    <TableCell>{payment.id}</TableCell>
-                    <TableCell>{payment.date}</TableCell>
-                    <TableCell>${payment.amount}</TableCell>
-                    <TableCell>{payment.status}</TableCell>
+            {paymentHistory.length > 0 ? (
+              <Table sx={{ minWidth: 750 }}>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>ID Thanh toán</TableCell>
+                    <TableCell>Ngày</TableCell>
+                    <TableCell>Số tiền</TableCell>
+                    <TableCell>Phương thức</TableCell>
+                    <TableCell>Trạng thái</TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHead>
+                <TableBody>
+                  {paymentHistory.map((payment) => (
+                    <TableRow key={payment.paymentId || payment.id}>
+                      <TableCell>{payment.paymentId || 'N/A'}</TableCell>
+                      <TableCell>{payment.paymentDate ? formatDate(payment.paymentDate) : 'N/A'}</TableCell>
+                      <TableCell>${payment.paymentAmount || 'N/A'}</TableCell>
+                      <TableCell>{payment.paymentMethod || 'N/A'}</TableCell>
+                      <TableCell>{getPaymentStatusText(payment.paymentStatus)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <div>Không có lịch sử thanh toán.</div>
+            )}
           </DialogContent>
           <DialogActions>
             <MuiButton onClick={handleClosePaymentDialog}>Đóng</MuiButton>

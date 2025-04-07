@@ -12,7 +12,6 @@ import {
   TableCell,
   TableHead,
   TableRow,
-  IconButton,
 } from '@mui/material';
 import axios from 'axios';
 import {
@@ -43,11 +42,9 @@ const RoomList = () => {
       try {
         const token = localStorage.getItem("token");
         if (!token) throw new Error("No authentication token found. Please log in.");
-
         const response = await axios.get('http://localhost:5053/api/rooms/all', {
           headers: { Authorization: `Bearer ${token}` },
         });
-
         const roomData = response.data.data || response.data;
         if (Array.isArray(roomData)) {
           setRooms(roomData);
@@ -135,12 +132,8 @@ const RoomList = () => {
 
       if (roomData.roomImages && roomData.roomImages.length > 0) {
         roomData.roomImages.forEach((file) => {
-          formData.append("RoomImages", file);
+          formData.append("imageFiles", file); // Sửa key thành imageFiles
         });
-      }
-
-      for (let pair of formData.entries()) {
-        console.log(`${pair[0]}: ${pair[1]}`);
       }
 
       let response;
@@ -151,7 +144,15 @@ const RoomList = () => {
             'Content-Type': 'multipart/form-data',
           },
         });
-        const newRoom = response.data.data;
+        const newRoom = {
+          roomId: response.data.data.roomId,
+          roomType: response.data.data.roomType,
+          price: response.data.data.price,
+          description: response.data.data.description,
+          thumbnailUrl: response.data.data.thumbnailUrl,
+          isAvailable: response.data.data.isAvailable,
+          roomImages: response.data.data.roomImages,
+        };
         setRooms([...rooms, newRoom]);
       } else if (action === 'update') {
         response = await axios.put(
@@ -164,7 +165,15 @@ const RoomList = () => {
             },
           }
         );
-        const updatedRoom = response.data.data;
+        const updatedRoom = {
+          roomId: selectedRoom.roomId,
+          roomType: response.data.data.roomType,
+          price: response.data.data.price,
+          description: response.data.data.description,
+          thumbnailUrl: response.data.data.thumbnailUrl,
+          isAvailable: response.data.data.isAvailable,
+          roomImages: response.data.data.roomImages,
+        };
         const updatedRooms = rooms.map((room) =>
           room.roomId === selectedRoom.roomId ? updatedRoom : room
         );
@@ -264,21 +273,38 @@ const RoomList = () => {
               <TableCell>{room.description || 'N/A'}</TableCell>
               <TableCell>
                 {room.thumbnailUrl ? (
-                  <a
-                    href={`http://localhost:5053${room.thumbnailUrl}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {room.thumbnailUrl}
-                  </a>
+                  <img
+                    src={`http://localhost:5053${room.thumbnailUrl}`}
+                    alt="Thumbnail"
+                    style={{ maxWidth: '100px', maxHeight: '100px' }}
+                    onError={(e) => {
+                      e.target.src = "https://via.placeholder.com/100x100?text=No+Image";
+                      console.error("Thumbnail load failed:", room.thumbnailUrl);
+                    }}
+                  />
                 ) : (
                   'N/A'
                 )}
               </TableCell>
               <TableCell>
-                {room.roomImages && room.roomImages.length > 0
-                  ? `${room.roomImages.length} files`
-                  : 'N/A'}
+                {room.roomImages && room.roomImages.length > 0 ? (
+                  <div>
+                    {room.roomImages.map((imgUrl, index) => (
+                      <img
+                        key={index}
+                        src={`http://localhost:5053${imgUrl}`}
+                        alt={`Room Image ${index + 1}`}
+                        style={{ maxWidth: '50px', maxHeight: '50px', margin: '5px' }}
+                        onError={(e) => {
+                          e.target.src = "https://via.placeholder.com/50x50?text=No+Image";
+                          console.error("Room image load failed:", imgUrl);
+                        }}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  'N/A'
+                )}
               </TableCell>
               <TableCell>{room.isAvailable ? 'Có' : 'Không'}</TableCell>
               <TableCell>
