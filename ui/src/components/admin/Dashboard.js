@@ -1,6 +1,5 @@
 // src/components/admin/Dashboard.js
 import React, { useEffect, useState } from 'react';
-import { mockRooms, mockUsers, mockBookings } from './mockData';
 import { Card, CardContent, Typography, Grid } from '@mui/material';
 
 const StatsCard = ({ title, value, bgColor, textColor }) => (
@@ -14,16 +13,84 @@ const StatsCard = ({ title, value, bgColor, textColor }) => (
 
 const Dashboard = () => {
   const [stats, setStats] = useState({ rooms: 0, users: 0, bookings: 0, revenue: 0 });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const totalRevenue = mockBookings.reduce((acc, booking) => acc + booking.totalPrice, 0);
-    setStats({
-      rooms: mockRooms.length,
-      users: mockUsers.length,
-      bookings: mockBookings.length,
-      revenue: totalRevenue,
-    });
+    const fetchData = async () => {
+      try {
+        // Lấy token từ localStorage
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('No token found in localStorage');
+        }
+
+        // Cấu hình headers cho tất cả các request
+        const headers = {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        };
+
+        // 1. Lấy revenue từ API
+        const revenueResponse = await fetch('http://localhost:5053/api/admin/statistics/revenue', {
+          method: 'GET',
+          headers,
+        });
+        if (!revenueResponse.ok) throw new Error('Failed to fetch revenue');
+        const revenueData = await revenueResponse.json();
+        const revenue = revenueData.data.revenue;
+
+        // 2. Đếm tổng bookings từ API
+        const bookingsResponse = await fetch('http://localhost:5053/api/bookings', {
+          method: 'GET',
+          headers,
+        });
+        if (!bookingsResponse.ok) throw new Error('Failed to fetch bookings');
+        const bookingsData = await bookingsResponse.json();
+        const bookingsCount = Array.isArray(bookingsData) ? bookingsData.length : bookingsData.data.length;
+
+        // 3. Đếm tổng users từ API
+        const usersResponse = await fetch('http://localhost:5053/api/admin/users', {
+          method: 'GET',
+          headers,
+        });
+        if (!usersResponse.ok) throw new Error('Failed to fetch users');
+        const usersData = await usersResponse.json();
+        const usersCount = Array.isArray(usersData) ? usersData.length : usersData.data.length;
+
+        // 4. Đếm tổng rooms từ API
+        const roomsResponse = await fetch('http://localhost:5053/api/rooms/all', {
+          method: 'GET',
+          headers,
+        });
+        if (!roomsResponse.ok) throw new Error('Failed to fetch rooms');
+        const roomsData = await roomsResponse.json();
+        const roomsCount = Array.isArray(roomsData) ? roomsData.length : roomsData.data.length;
+
+        // Cập nhật state với dữ liệu từ API
+        setStats({
+          rooms: roomsCount,
+          users: usersCount,
+          bookings: bookingsCount,
+          revenue: revenue,
+        });
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
+
+  if (loading) {
+    return <Typography align="center">Loading...</Typography>;
+  }
+
+  if (error) {
+    return <Typography align="center" color="error">Error: {error}</Typography>;
+  }
 
   return (
     <div style={{ padding: '20px', backgroundColor: '#fafafa', minHeight: '100vh', width: '100%' }}>

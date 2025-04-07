@@ -23,7 +23,7 @@ import {
 
 const RoomList = () => {
   const [openDialog, setOpenDialog] = useState(false);
-  const [action, setAction] = useState('');
+  const [action, setAction] = useState(''); // 'add', 'update', hoặc 'delete'
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [roomData, setRoomData] = useState({
     roomType: '',
@@ -37,41 +37,46 @@ const RoomList = () => {
   const [rooms, setRooms] = useState([]);
   const [error, setError] = useState(null);
 
+  // Lấy danh sách phòng khi component được mount
   useEffect(() => {
     const fetchRooms = async () => {
       try {
         const token = localStorage.getItem("token");
-        if (!token) throw new Error("No authentication token found. Please log in.");
+        if (!token) throw new Error("Vui lòng đăng nhập để xem danh sách phòng.");
+        
         const response = await axios.get('http://localhost:5053/api/rooms/all', {
           headers: { Authorization: `Bearer ${token}` },
         });
-        const roomData = response.data.data || response.data;
+        
+        // Backend trả về dữ liệu trong response.data.data
+        const roomData = response.data.data || [];
         if (Array.isArray(roomData)) {
           setRooms(roomData);
         } else {
-          throw new Error("Invalid data format from API");
+          throw new Error("Dữ liệu từ API không đúng định dạng.");
         }
       } catch (err) {
         setError(
           err.response?.status === 401
-            ? "Unauthorized: Please log in to view rooms."
-            : "Failed to load rooms. Please check the API or console for details."
+            ? "Không được phép: Vui lòng đăng nhập."
+            : "Không thể tải danh sách phòng. Kiểm tra API hoặc console."
         );
-        console.error("Error fetching rooms:", err.response || err);
+        console.error("Lỗi khi lấy danh sách phòng:", err.response || err);
       }
     };
     fetchRooms();
   }, []);
 
-  const handleOpenDialog = (action, room = null) => {
-    setAction(action);
+  // Mở dialog để thêm, cập nhật hoặc xóa phòng
+  const handleOpenDialog = (actionType, room = null) => {
+    setAction(actionType);
     if (room) {
       setSelectedRoom(room);
       setRoomData({
         roomType: room.roomType,
         price: room.price,
         description: room.description || '',
-        thumbnailUrl: null,
+        thumbnailUrl: null, // Không preload ảnh cũ, yêu cầu upload lại
         isAvailable: room.isAvailable,
         roomImages: [],
       });
@@ -88,6 +93,7 @@ const RoomList = () => {
     setOpenDialog(true);
   };
 
+  // Đóng dialog và reset dữ liệu
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setAction('');
@@ -100,25 +106,28 @@ const RoomList = () => {
       isAvailable: false,
       roomImages: [],
     });
+    setError(null); // Reset lỗi khi đóng dialog
   };
 
+  // Xử lý lưu phòng (thêm hoặc cập nhật)
   const handleSave = async () => {
     const token = localStorage.getItem("token");
     if (!token) {
-      setError("No authentication token found. Please log in.");
+      setError("Vui lòng đăng nhập để thực hiện hành động này.");
       return;
     }
 
+    // Kiểm tra dữ liệu đầu vào
     if (!roomData.roomType || roomData.roomType.length < 3) {
-      setError("Room type must be at least 3 characters.");
+      setError("Loại phòng phải có ít nhất 3 ký tự.");
       return;
     }
-    if (!roomData.price || isNaN(roomData.price)) {
-      setError("Price must be a valid number.");
+    if (!roomData.price || isNaN(roomData.price) || Number(roomData.price) <= 0) {
+      setError("Giá phải là một số dương hợp lệ.");
       return;
     }
-    if (!roomData.thumbnailUrl) {
-      setError("Thumbnail image is required.");
+    if (!roomData.thumbnailUrl && action === 'add') {
+      setError("Ảnh đại diện là bắt buộc khi thêm phòng.");
       return;
     }
 
@@ -128,11 +137,12 @@ const RoomList = () => {
       formData.append("Price", Number(roomData.price).toString());
       formData.append("Description", roomData.description || "");
       formData.append("IsAvailable", roomData.isAvailable.toString());
-      formData.append("ThumbnailUrl", roomData.thumbnailUrl);
-
-      if (roomData.roomImages && roomData.roomImages.length > 0) {
+      if (roomData.thumbnailUrl) {
+        formData.append("ThumbnailUrl", roomData.thumbnailUrl);
+      }
+      if (roomData.roomImages.length > 0) {
         roomData.roomImages.forEach((file) => {
-          formData.append("imageFiles", file); // Sửa key thành imageFiles
+          formData.append("imageFiles", file);
         });
       }
 
@@ -144,6 +154,8 @@ const RoomList = () => {
             'Content-Type': 'multipart/form-data',
           },
         });
+
+        // Dữ liệu từ backend nằm trong response.data.data
         const newRoom = {
           roomId: response.data.data.roomId,
           roomType: response.data.data.roomType,
@@ -151,7 +163,7 @@ const RoomList = () => {
           description: response.data.data.description,
           thumbnailUrl: response.data.data.thumbnailUrl,
           isAvailable: response.data.data.isAvailable,
-          roomImages: response.data.data.roomImages,
+          roomImages: response.data.data.roomImages || [],
         };
         setRooms([...rooms, newRoom]);
       } else if (action === 'update') {
@@ -165,6 +177,7 @@ const RoomList = () => {
             },
           }
         );
+
         const updatedRoom = {
           roomId: selectedRoom.roomId,
           roomType: response.data.data.roomType,
@@ -172,52 +185,51 @@ const RoomList = () => {
           description: response.data.data.description,
           thumbnailUrl: response.data.data.thumbnailUrl,
           isAvailable: response.data.data.isAvailable,
-          roomImages: response.data.data.roomImages,
+          roomImages: response.data.data.roomImages || [],
         };
-        const updatedRooms = rooms.map((room) =>
-          room.roomId === selectedRoom.roomId ? updatedRoom : room
+        setRooms(
+          rooms.map((room) =>
+            room.roomId === selectedRoom.roomId ? updatedRoom : room
+          )
         );
-        setRooms(updatedRooms);
       }
 
       handleCloseDialog();
     } catch (err) {
       setError(
         err.response?.status === 401
-          ? "Unauthorized: You must be an admin to perform this action."
-          : err.response?.data?.message || "Failed to save room. Please check the API or console for details."
+          ? "Không được phép: Bạn phải là admin để thực hiện hành động này."
+          : err.response?.data?.message || "Không thể lưu phòng. Kiểm tra API hoặc console."
       );
-      console.error("Error saving room:", err.response || err);
+      console.error("Lỗi khi lưu phòng:", err.response || err);
     }
   };
 
+  // Xử lý xóa phòng
   const handleDelete = async () => {
     const token = localStorage.getItem("token");
     if (!token) {
-      setError("No authentication token found. Please log in.");
+      setError("Vui lòng đăng nhập để thực hiện hành động này.");
       return;
     }
 
     try {
       await axios.delete(`http://localhost:5053/api/rooms/${selectedRoom.roomId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
-
-      const updatedRooms = rooms.filter((room) => room.roomId !== selectedRoom.roomId);
-      setRooms(updatedRooms);
+      setRooms(rooms.filter((room) => room.roomId !== selectedRoom.roomId));
       handleCloseDialog();
     } catch (err) {
       setError(
         err.response?.status === 401
-          ? "Unauthorized: You must be an admin to delete a room."
-          : err.response?.data?.message || "Failed to delete room. Please check the API or console for details."
+          ? "Không được phép: Bạn phải là admin để xóa phòng."
+          : err.response?.data?.message || "Không thể xóa phòng. Kiểm tra API hoặc console."
       );
-      console.error("Error deleting room:", err.response || err);
+      console.error("Lỗi khi xóa phòng:", err.response || err);
     }
   };
 
+  // Xử lý thay đổi ảnh đại diện
   const handleThumbnailChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -225,11 +237,13 @@ const RoomList = () => {
     }
   };
 
+  // Xử lý thay đổi ảnh phòng
   const handleImagesChange = (e) => {
     const files = Array.from(e.target.files);
     setRoomData({ ...roomData, roomImages: files });
   };
 
+  // Lọc danh sách phòng theo từ khóa tìm kiếm
   const filteredRooms = rooms.filter((room) =>
     room.roomType.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -237,14 +251,18 @@ const RoomList = () => {
   return (
     <div style={{ padding: '20px', width: '100%' }}>
       {error && <div style={{ color: 'red', marginBottom: '20px' }}>{error}</div>}
+      
+      {/* Ô tìm kiếm */}
       <MuiTextField
-        label="Tìm kiếm theo Loại phòng"
+        label="Tìm kiếm theo loại phòng"
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
         fullWidth
         style={{ marginBottom: '20px' }}
         sx={searchFieldStyle}
       />
+      
+      {/* Nút thêm phòng */}
       <MuiButton
         variant="contained"
         color="primary"
@@ -253,6 +271,8 @@ const RoomList = () => {
       >
         Thêm phòng
       </MuiButton>
+      
+      {/* Bảng danh sách phòng */}
       <Table sx={tableStyle}>
         <TableHead>
           <TableRow>
@@ -270,20 +290,20 @@ const RoomList = () => {
             <TableRow key={room.roomId}>
               <TableCell>{room.roomType}</TableCell>
               <TableCell>{room.price}</TableCell>
-              <TableCell>{room.description || 'N/A'}</TableCell>
+              <TableCell>{room.description || 'Không có'}</TableCell>
               <TableCell>
                 {room.thumbnailUrl ? (
                   <img
                     src={`http://localhost:5053${room.thumbnailUrl}`}
-                    alt="Thumbnail"
+                    alt="Ảnh đại diện"
                     style={{ maxWidth: '100px', maxHeight: '100px' }}
                     onError={(e) => {
-                      e.target.src = "https://via.placeholder.com/100x100?text=No+Image";
-                      console.error("Thumbnail load failed:", room.thumbnailUrl);
+                      e.target.src = "https://via.placeholder.com/100x100?text=Không+tải+được";
+                      console.error("Lỗi tải ảnh đại diện:", room.thumbnailUrl);
                     }}
                   />
                 ) : (
-                  'N/A'
+                  'Không có'
                 )}
               </TableCell>
               <TableCell>
@@ -293,17 +313,17 @@ const RoomList = () => {
                       <img
                         key={index}
                         src={`http://localhost:5053${imgUrl}`}
-                        alt={`Room Image ${index + 1}`}
+                        alt={`Ảnh phòng ${index + 1}`}
                         style={{ maxWidth: '50px', maxHeight: '50px', margin: '5px' }}
                         onError={(e) => {
-                          e.target.src = "https://via.placeholder.com/50x50?text=No+Image";
-                          console.error("Room image load failed:", imgUrl);
+                          e.target.src = "https://via.placeholder.com/50x50?text=Không+tải+được";
+                          console.error("Lỗi tải ảnh phòng:", imgUrl);
                         }}
                       />
                     ))}
                   </div>
                 ) : (
-                  'N/A'
+                  'Không có'
                 )}
               </TableCell>
               <TableCell>{room.isAvailable ? 'Có' : 'Không'}</TableCell>
@@ -329,6 +349,7 @@ const RoomList = () => {
         </TableBody>
       </Table>
 
+      {/* Dialog thêm/cập nhật/xóa */}
       <Dialog open={openDialog} onClose={handleCloseDialog}>
         <DialogTitle>
           {action === 'add' ? 'Thêm phòng' : action === 'update' ? 'Cập nhật phòng' : 'Xóa phòng'}
@@ -386,7 +407,7 @@ const RoomList = () => {
                 />
                 {roomData.roomImages.length > 0 && (
                   <span style={{ marginLeft: '10px' }}>
-                    {roomData.roomImages.length} files selected
+                    Đã chọn {roomData.roomImages.length} tệp
                   </span>
                 )}
               </div>

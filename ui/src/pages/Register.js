@@ -124,7 +124,6 @@ function Register() {
         </div>
         
       </div>
-      <Footer />
     </div>
   );
 }
