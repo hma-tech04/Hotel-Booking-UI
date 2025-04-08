@@ -1,4 +1,3 @@
-// src/components/RoomList.js
 import React, { useState, useEffect } from "react";
 import RoomCard from "./RoomCard";
 import axios from "axios";
@@ -21,12 +20,12 @@ function RoomList({ searchResults, searchCriteria }) {
           const response = await axios.get("http://localhost:5053/api/rooms/all");
           const roomData = response.data.data || response.data;
           if (!Array.isArray(roomData)) {
-            throw new Error("Unexpected data format from API");
+            throw new Error("Định dạng dữ liệu từ API không đúng");
           }
           setRooms(roomData.slice(0, 3)); // Chỉ lấy 3 phòng đầu tiên
         } catch (err) {
-          setError(`Failed to load rooms: ${err.message}. Check console for details.`);
-          console.error("Error fetching rooms:", err.response ? err.response.data : err);
+          setError(`Không thể tải danh sách phòng: ${err.message}. Xem chi tiết trong console.`);
+          console.error("Lỗi khi tải danh sách phòng:", err.response ? err.response.data : err);
         } finally {
           setLoading(false);
         }
@@ -35,7 +34,7 @@ function RoomList({ searchResults, searchCriteria }) {
     }
   }, [searchResults]);
 
-  if (loading) return <div>Loading rooms...</div>;
+  if (loading) return <div>Đang tải danh sách phòng...</div>;
   if (error) return <div>{error}</div>;
 
   // Tạo tiêu đề động dựa trên searchCriteria
@@ -43,13 +42,13 @@ function RoomList({ searchResults, searchCriteria }) {
     if (searchCriteria) {
       const { checkIn, checkOut, adults } = searchCriteria;
       return {
-        subTitle: `AVAILABLE ROOMS FROM ${checkIn} TO ${checkOut}`,
-        mainTitle: `${adults} ROOMS`
+        subTitle: `CÁC PHÒNG CÒN TRỐNG TỪ ${checkIn} ĐẾN ${checkOut}`,
+        mainTitle: `${adults} PHÒNG`,
       };
     }
     return {
       subTitle: "ĐEM LẠI TRẢI NGHIỆM THOẢI MÁI NHẤT",
-      mainTitle: "Rooms & Suites"
+      mainTitle: "Phòng & Căn Hộ",
     };
   };
 
@@ -68,7 +67,7 @@ function RoomList({ searchResults, searchCriteria }) {
           {rooms.length > 0 ? (
             rooms.map((room) => <RoomCard key={room.roomId} room={room} />)
           ) : (
-            <div>No rooms available.</div>
+            <div>Không có phòng nào khả dụng.</div>
           )}
         </div>
       </div>

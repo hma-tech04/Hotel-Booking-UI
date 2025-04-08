@@ -27,10 +27,10 @@ function RoomCardDisplay() {
           setFilteredRooms(responseData.data);
           setTotalPages(responseData.totalPages || 1);
         } else {
-          throw new Error("Invalid data format from API");
+          throw new Error("Định dạng dữ liệu từ API không hợp lệ");
         }
       } catch (err) {
-        setError("Failed to load rooms. Please check the API or console for details.");
+        setError("Không thể tải danh sách phòng. Vui lòng kiểm tra API hoặc console để biết chi tiết.");
         console.error("Error fetching rooms:", err.response || err);
       } finally {
         setLoading(false);
@@ -56,13 +56,13 @@ function RoomCardDisplay() {
         if (Array.isArray(responseData)) {
           setFilteredRooms(responseData);
         } else {
-          throw new Error("Invalid data format from API");
+          throw new Error("Định dạng dữ liệu từ API không hợp lệ");
         }
       } catch (err) {
         setError(
           err.response?.status === 404
-            ? "No rooms found for this type."
-            : "Failed to search rooms. Please try again."
+            ? "Không tìm thấy phòng nào phù hợp với loại này."
+            : "Không thể tìm kiếm phòng. Vui lòng thử lại."
         );
         setFilteredRooms([]);
         console.error("Error searching rooms:", err.response || err);
@@ -82,14 +82,14 @@ function RoomCardDisplay() {
     if (currentPage > 1) setCurrentPage(currentPage - 1);
   };
 
-  if (loading) return <div>Loading rooms...</div>;
+  if (loading) return <div>Đang tải danh sách phòng...</div>;
   if (error) return <div>{error}</div>;
   if (!rooms || rooms.length === 0) {
     return (
       <div className="container">
-        <h2>No Rooms Available</h2>
+        <h2>Không Có Phòng Nào</h2>
         <Link to="/">
-          <button className="book-now-btn">Back to Home</button>
+          <button className="book-now-btn">Quay Về Trang Chủ</button>
         </Link>
       </div>
     );
@@ -102,7 +102,7 @@ function RoomCardDisplay() {
           <div className="search-container">
             <input
               type="text"
-              placeholder="Search by room type..."
+              placeholder="Tìm kiếm theo loại phòng..."
               value={searchTerm}
               onChange={handleSearchChange}
               onKeyPress={handleKeyPress}
@@ -113,8 +113,8 @@ function RoomCardDisplay() {
 
         <div className="heading_top flex1">
           <div className="heading">
-            <h5>RAISING COMFORT TO THE HIGHEST LEVEL</h5>
-            <h2>All Rooms & Suites</h2>
+            <h5>NÂNG TẦM SỰ THOẢI MÁI LÊN CAO NHẤT</h5>
+            <h2>Tất Cả Phòng & Suites</h2>
           </div>
         </div>
 
@@ -130,12 +130,12 @@ function RoomCardDisplay() {
                             /\\/g,
                             "/"
                           )}`
-                        : "https://via.placeholder.com/300x200?text=No+Image"
+                        : "https://via.placeholder.com/300x200?text=Không+Có+Hình"
                     }
-                    alt={room.roomType || "Room Image"}
+                    alt={room.roomType || "Hình Ảnh Phòng"}
                     onError={(e) => {
                       e.target.src =
-                        "https://via.placeholder.com/300x200?text=No+Image";
+                        "https://via.placeholder.com/300x200?text=Không+Có+Hình";
                       console.error(
                         "Image load failed for:",
                         room.thumbnailUrl
@@ -144,27 +144,26 @@ function RoomCardDisplay() {
                   />
                 </div>
                 <div className="text">
-                  <h3>{room.roomType || "Unknown Room Type"}</h3>
+                  <h3>{room.roomType || "Loại Phòng Không Xác Định"}</h3>
                   <p>
-                    <span>${room.price || 0}</span> per night
+                    <span>${room.price || 0}</span> mỗi đêm
                   </p>
-                  <p>{room.description || "No description available"}</p>
                   <p>
-                    Status: {room.isAvailable ? "Available" : "Not Available"}
+                    Trạng thái: {room.isAvailable ? "Còn Trống" : "Đã Đặt"}
                   </p>
                   <div className="button-group">
                     <Link to={`/booking-page/${room.roomId}`}>
-                      <button className="book-now-btn">Book Now</button>
+                      <button className="book-now-btn">Đặt Ngay</button>
                     </Link>
                     <Link to={`/room/${room.roomId}`}>
-                      <button className="book-now-btn">Show Detail</button>
+                      <button className="book-now-btn">Xem Chi Tiết</button>
                     </Link>
                   </div>
                 </div>
               </div>
             ))
           ) : (
-            <div>No rooms match your search.</div>
+            <div>Không có phòng nào khớp với tìm kiếm của bạn.</div>
           )}
         </div>
 
@@ -186,10 +185,10 @@ function RoomCardDisplay() {
                 cursor: currentPage === 1 ? "not-allowed" : "pointer",
               }}
             >
-              Previous
+              Trước
             </button>
             <span style={{ margin: "0 10px" }}>
-              Page {currentPage} of {totalPages}
+              Trang {currentPage} / {totalPages}
             </span>
             <button
               onClick={handleNextPage}
@@ -205,7 +204,7 @@ function RoomCardDisplay() {
                 cursor: currentPage === totalPages ? "not-allowed" : "pointer",
               }}
             >
-              Next
+              Sau
             </button>
           </div>
         )}

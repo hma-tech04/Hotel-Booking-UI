@@ -13,7 +13,15 @@ html, body {
   font-family: 'Roboto Slab', serif;
   scroll-behavior: smooth;
 }
-
+body {
+  display: flex;
+  flex-direction: column; 
+  min-height: 100vh; /* Chiều cao tối thiểu bằng 100% viewport */
+}
+.main-content {
+  flex: 1; /* Cho phép phần này mở rộng để đẩy footer xuống */
+  min-height: 80vh; /* Đảm bảo chiều cao tối thiểu, có thể điều chỉnh */
+}
 li {
   list-style: none;
 }

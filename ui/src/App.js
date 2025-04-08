@@ -79,15 +79,7 @@ function App() {
       <div className="page-wrapper">
         <CssBaseline />
         <Header isAdmin={isAdmin} updateAdminStatus={updateAdminStatus} />
-        <main
-          style={{
-            flex: '1 0 auto',
-            paddingTop: 0,
-            paddingLeft: 0,
-            paddingRight: 0,
-            width: '100%',
-          }}
-        >
+        <main className="main-content" >
           <div style={{ maxWidth: '1400px', margin: '0 auto', width: '100%' }}>
             <Routes>
               <Route path="/" element={<Home />} />

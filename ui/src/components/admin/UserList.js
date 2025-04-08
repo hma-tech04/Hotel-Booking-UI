@@ -13,6 +13,7 @@ import {
   TableHead,
   TableRow,
 } from '@mui/material';
+import { textFieldStyle } from '../../styles/RoomList.css'; // Import style từ RoomList.css
 
 const UserList = () => {
   const [openDialog, setOpenDialog] = useState(false);
@@ -182,6 +183,28 @@ const UserList = () => {
       (user.email || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // Tùy chỉnh textFieldStyle để có màu viền blue khi focus
+  const customTextFieldStyle = {
+    ...textFieldStyle,
+    '& .MuiOutlinedInput-root': {
+      ...textFieldStyle['& .MuiOutlinedInput-root'],
+      '&.Mui-focused fieldset': {
+        borderColor: 'blue', // Màu viền khi focus
+      },
+    },
+  };
+
+  // Tùy chỉnh textFieldStyle để có màu viền pink khi focus (cho dialog)
+  const customDialogTextFieldStyle = {
+    ...textFieldStyle,
+    '& .MuiOutlinedInput-root': {
+      ...textFieldStyle['& .MuiOutlinedInput-root'],
+      '&.Mui-focused fieldset': {
+        borderColor: 'pink', // Màu viền khi focus
+      },
+    },
+  };
+
   return (
     <div style={{ padding: '20px', width: '100%' }}>
       <MuiTextField
@@ -190,26 +213,7 @@ const UserList = () => {
         onChange={(e) => setSearchQuery(e.target.value)}
         fullWidth
         style={{ marginBottom: '20px' }}
-        sx={{
-          '& .MuiInputBase-root': {
-            backgroundColor: '#fff', // Màu nền trắng
-            '&:hover': {
-              backgroundColor: '#f5f5f5', // Màu nền khi hover
-            },
-            '&.Mui-focused': {
-              backgroundColor: '#fff', // Màu nền khi focus
-            }
-          },
-          '& .MuiOutlinedInput-notchedOutline': {
-            borderColor: '#ccc', // Màu viền mặc định
-          },
-          '&:hover .MuiOutlinedInput-notchedOutline': {
-            borderColor: '#888', // Màu viền khi hover
-          },
-          '& .Mui-focused .MuiOutlinedInput-notchedOutline': {
-            borderColor: 'blue', // Màu viền khi focus
-          }
-        }}
+        sx={customTextFieldStyle} // Sử dụng style tùy chỉnh với viền blue
       />
       {loading ? (
         <div>Đang tải dữ liệu...</div>
@@ -263,26 +267,7 @@ const UserList = () => {
             value={userRole}
             onChange={(e) => setUserRole(e.target.value)}
             fullWidth
-            sx={{
-              '& .MuiInputBase-root': {
-                backgroundColor: '#fff', // Màu nền trắng
-                '&:hover': {
-                  backgroundColor: '#f5f5f5', // Màu nền khi hover
-                },
-                '&.Mui-focused': {
-                  backgroundColor: '#fff', // Màu nền khi focus
-                }
-              },
-              '& .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#ccc', // Màu viền mặc định
-              },
-              '&:hover .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#888', // Màu viền khi hover
-              },
-              '& .Mui-focused .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'pink', // Màu viền khi focus
-              }
-            }}
+            sx={customDialogTextFieldStyle} // Sử dụng style tùy chỉnh với viền pink
           />
         </DialogContent>
         <DialogActions>

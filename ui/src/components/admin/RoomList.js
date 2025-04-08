@@ -12,6 +12,8 @@ import {
   TableCell,
   TableHead,
   TableRow,
+  Alert,
+  Typography,
 } from '@mui/material';
 import axios from 'axios';
 import {
@@ -23,32 +25,33 @@ import {
 
 const RoomList = () => {
   const [openDialog, setOpenDialog] = useState(false);
-  const [action, setAction] = useState(''); // 'add', 'update', hoặc 'delete'
+  const [action, setAction] = useState('');
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [roomData, setRoomData] = useState({
     roomType: '',
     price: '',
     description: '',
-    thumbnailUrl: null,
+    thumbnailUrl: null, // New thumbnail file
+    existingThumbnailUrl: '', // Existing thumbnail URL
     isAvailable: false,
-    roomImages: [],
+    roomImages: [], // New room image files
+    existingRoomImages: [], // Existing room image URLs
   });
   const [searchQuery, setSearchQuery] = useState('');
   const [rooms, setRooms] = useState([]);
   const [error, setError] = useState(null);
 
-  // Lấy danh sách phòng khi component được mount
+  // Fetch rooms on mount
   useEffect(() => {
     const fetchRooms = async () => {
       try {
         const token = localStorage.getItem("token");
         if (!token) throw new Error("Vui lòng đăng nhập để xem danh sách phòng.");
-        
+
         const response = await axios.get('http://localhost:5053/api/rooms/all', {
           headers: { Authorization: `Bearer ${token}` },
         });
-        
-        // Backend trả về dữ liệu trong response.data.data
+
         const roomData = response.data.data || [];
         if (Array.isArray(roomData)) {
           setRooms(roomData);
@@ -67,7 +70,7 @@ const RoomList = () => {
     fetchRooms();
   }, []);
 
-  // Mở dialog để thêm, cập nhật hoặc xóa phòng
+  // Open dialog for add/update/delete
   const handleOpenDialog = (actionType, room = null) => {
     setAction(actionType);
     if (room) {
@@ -76,9 +79,11 @@ const RoomList = () => {
         roomType: room.roomType,
         price: room.price,
         description: room.description || '',
-        thumbnailUrl: null, // Không preload ảnh cũ, yêu cầu upload lại
+        thumbnailUrl: null, // New file to upload (null if unchanged)
+        existingThumbnailUrl: room.thumbnailUrl, // Keep existing URL
         isAvailable: room.isAvailable,
-        roomImages: [],
+        roomImages: [], // New files to upload
+        existingRoomImages: room.roomImages || [], // Keep existing URLs
       });
     } else {
       setRoomData({
@@ -86,14 +91,16 @@ const RoomList = () => {
         price: '',
         description: '',
         thumbnailUrl: null,
+        existingThumbnailUrl: '',
         isAvailable: false,
         roomImages: [],
+        existingRoomImages: [],
       });
     }
     setOpenDialog(true);
   };
 
-  // Đóng dialog và reset dữ liệu
+  // Close dialog and reset data
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setAction('');
@@ -103,21 +110,22 @@ const RoomList = () => {
       price: '',
       description: '',
       thumbnailUrl: null,
+      existingThumbnailUrl: '',
       isAvailable: false,
       roomImages: [],
+      existingRoomImages: [],
     });
-    setError(null); // Reset lỗi khi đóng dialog
+    setError(null);
   };
 
-  // Xử lý lưu phòng (thêm hoặc cập nhật)
+  // Handle save (add or update)
   const handleSave = async () => {
     const token = localStorage.getItem("token");
     if (!token) {
-      setError("Vui lòng đăng nhập để thực hiện hành động này.");
+      setError(".ConcurrentHashMapVui lòng đăng nhập để thực hiện hành động này.");
       return;
     }
 
-    // Kiểm tra dữ liệu đầu vào
     if (!roomData.roomType || roomData.roomType.length < 3) {
       setError("Loại phòng phải có ít nhất 3 ký tự.");
       return;
@@ -126,7 +134,7 @@ const RoomList = () => {
       setError("Giá phải là một số dương hợp lệ.");
       return;
     }
-    if (!roomData.thumbnailUrl && action === 'add') {
+    if (action === 'add' && !roomData.thumbnailUrl) {
       setError("Ảnh đại diện là bắt buộc khi thêm phòng.");
       return;
     }
@@ -137,9 +145,13 @@ const RoomList = () => {
       formData.append("Price", Number(roomData.price).toString());
       formData.append("Description", roomData.description || "");
       formData.append("IsAvailable", roomData.isAvailable.toString());
+
+      // Only append thumbnail if a new file is selected
       if (roomData.thumbnailUrl) {
         formData.append("ThumbnailUrl", roomData.thumbnailUrl);
       }
+
+      // Append new room images
       if (roomData.roomImages.length > 0) {
         roomData.roomImages.forEach((file) => {
           formData.append("imageFiles", file);
@@ -154,17 +166,7 @@ const RoomList = () => {
             'Content-Type': 'multipart/form-data',
           },
         });
-
-        // Dữ liệu từ backend nằm trong response.data.data
-        const newRoom = {
-          roomId: response.data.data.roomId,
-          roomType: response.data.data.roomType,
-          price: response.data.data.price,
-          description: response.data.data.description,
-          thumbnailUrl: response.data.data.thumbnailUrl,
-          isAvailable: response.data.data.isAvailable,
-          roomImages: response.data.data.roomImages || [],
-        };
+        const newRoom = response.data.data;
         setRooms([...rooms, newRoom]);
       } else if (action === 'update') {
         response = await axios.put(
@@ -177,23 +179,13 @@ const RoomList = () => {
             },
           }
         );
-
-        const updatedRoom = {
-          roomId: selectedRoom.roomId,
-          roomType: response.data.data.roomType,
-          price: response.data.data.price,
-          description: response.data.data.description,
-          thumbnailUrl: response.data.data.thumbnailUrl,
-          isAvailable: response.data.data.isAvailable,
-          roomImages: response.data.data.roomImages || [],
-        };
+        const updatedRoom = response.data.data;
         setRooms(
           rooms.map((room) =>
             room.roomId === selectedRoom.roomId ? updatedRoom : room
           )
         );
       }
-
       handleCloseDialog();
     } catch (err) {
       setError(
@@ -205,7 +197,7 @@ const RoomList = () => {
     }
   };
 
-  // Xử lý xóa phòng
+  // Handle delete
   const handleDelete = async () => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -229,7 +221,7 @@ const RoomList = () => {
     }
   };
 
-  // Xử lý thay đổi ảnh đại diện
+  // Handle thumbnail change
   const handleThumbnailChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -237,22 +229,27 @@ const RoomList = () => {
     }
   };
 
-  // Xử lý thay đổi ảnh phòng
+  // Handle room images change
   const handleImagesChange = (e) => {
     const files = Array.from(e.target.files);
     setRoomData({ ...roomData, roomImages: files });
   };
 
-  // Lọc danh sách phòng theo từ khóa tìm kiếm
+  // Remove an existing room image (frontend-side only)
+  const handleRemoveExistingImage = (index) => {
+    const updatedImages = roomData.existingRoomImages.filter((_, i) => i !== index);
+    setRoomData({ ...roomData, existingRoomImages: updatedImages });
+  };
+
+  // Filter rooms by search query
   const filteredRooms = rooms.filter((room) =>
     room.roomType.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
     <div style={{ padding: '20px', width: '100%' }}>
-      {error && <div style={{ color: 'red', marginBottom: '20px' }}>{error}</div>}
-      
-      {/* Ô tìm kiếm */}
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+
       <MuiTextField
         label="Tìm kiếm theo loại phòng"
         value={searchQuery}
@@ -261,8 +258,7 @@ const RoomList = () => {
         style={{ marginBottom: '20px' }}
         sx={searchFieldStyle}
       />
-      
-      {/* Nút thêm phòng */}
+
       <MuiButton
         variant="contained"
         color="primary"
@@ -271,8 +267,7 @@ const RoomList = () => {
       >
         Thêm phòng
       </MuiButton>
-      
-      {/* Bảng danh sách phòng */}
+
       <Table sx={tableStyle}>
         <TableHead>
           <TableRow>
@@ -299,7 +294,6 @@ const RoomList = () => {
                     style={{ maxWidth: '100px', maxHeight: '100px' }}
                     onError={(e) => {
                       e.target.src = "https://via.placeholder.com/100x100?text=Không+tải+được";
-                      console.error("Lỗi tải ảnh đại diện:", room.thumbnailUrl);
                     }}
                   />
                 ) : (
@@ -317,7 +311,6 @@ const RoomList = () => {
                         style={{ maxWidth: '50px', maxHeight: '50px', margin: '5px' }}
                         onError={(e) => {
                           e.target.src = "https://via.placeholder.com/50x50?text=Không+tải+được";
-                          console.error("Lỗi tải ảnh phòng:", imgUrl);
                         }}
                       />
                     ))}
@@ -349,7 +342,6 @@ const RoomList = () => {
         </TableBody>
       </Table>
 
-      {/* Dialog thêm/cập nhật/xóa */}
       <Dialog open={openDialog} onClose={handleCloseDialog}>
         <DialogTitle>
           {action === 'add' ? 'Thêm phòng' : action === 'update' ? 'Cập nhật phòng' : 'Xóa phòng'}
@@ -385,30 +377,60 @@ const RoomList = () => {
                 sx={descriptionFieldStyle}
               />
               <div style={{ marginBottom: '10px' }}>
-                <label>Ảnh đại diện:</label>
+                <Typography variant="subtitle2">Ảnh đại diện:</Typography>
+                {roomData.existingThumbnailUrl && !roomData.thumbnailUrl && (
+                  <img
+                    src={`http://localhost:5053${roomData.existingThumbnailUrl}`}
+                    alt="Current Thumbnail"
+                    style={{ maxWidth: '100px', maxHeight: '100px', marginTop: '5px' }}
+                  />
+                )}
                 <input
                   type="file"
                   accept="image/*"
                   onChange={handleThumbnailChange}
-                  style={{ marginLeft: '10px' }}
+                  style={{ marginTop: '5px' }}
                 />
                 {roomData.thumbnailUrl && (
-                  <span style={{ marginLeft: '10px' }}>{roomData.thumbnailUrl.name}</span>
+                  <Typography variant="caption" sx={{ ml: 1 }}>
+                    {roomData.thumbnailUrl.name}
+                  </Typography>
                 )}
               </div>
               <div style={{ marginBottom: '10px' }}>
-                <label>Ảnh phòng:</label>
+                <Typography variant="subtitle2">Ảnh phòng:</Typography>
+                {roomData.existingRoomImages.length > 0 && (
+                  <div>
+                    {roomData.existingRoomImages.map((imgUrl, index) => (
+                      <div key={index} style={{ display: 'flex', alignItems: 'center', marginTop: '5px' }}>
+                        <img
+                          src={`http://localhost:5053${imgUrl}`}
+                          alt={`Existing ${index + 1}`}
+                          style={{ maxWidth: '50px', maxHeight: '50px' }}
+                        />
+                        <MuiButton
+                          size="small"
+                          color="secondary"
+                          onClick={() => handleRemoveExistingImage(index)}
+                          sx={{ ml: 1 }}
+                        >
+                          Xóa
+                        </MuiButton>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <input
                   type="file"
                   accept="image/*"
                   multiple
                   onChange={handleImagesChange}
-                  style={{ marginLeft: '10px' }}
+                  style={{ marginTop: '5px' }}
                 />
                 {roomData.roomImages.length > 0 && (
-                  <span style={{ marginLeft: '10px' }}>
+                  <Typography variant="caption" sx={{ ml: 1 }}>
                     Đã chọn {roomData.roomImages.length} tệp
-                  </span>
+                  </Typography>
                 )}
               </div>
               <div>

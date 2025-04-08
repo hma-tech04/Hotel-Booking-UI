@@ -11,9 +11,12 @@ import {
   TableCell,
   TableHead,
   TableRow,
+  Typography,
 } from '@mui/material';
+import { CheckCircleOutline, Cancel } from '@mui/icons-material';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
+import { textFieldStyle } from '../../styles/RoomList.css'; // Giả sử file này tồn tại
 
 const BookingList = () => {
   const [openDialog, setOpenDialog] = useState(false);
@@ -259,7 +262,6 @@ const BookingList = () => {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('Không tìm thấy token xác thực.');
 
-      // Kiểm tra trạng thái thanh toán trước khi check-in hoặc check-out
       if (action === 'checkin' || action === 'checkout') {
         const isCompleted = await checkPaymentStatus(booking.bookingId);
         console.log(`Payment status for booking ${booking.bookingId}: ${isCompleted ? 'Completed' : 'Not Completed'}`);
@@ -268,7 +270,6 @@ const BookingList = () => {
         }
       }
 
-      // Kiểm tra điều kiện trước khi check-in
       if (action === 'checkin') {
         console.log('Checking check-in conditions...');
         if (booking.actualCheckInTime !== null) {
@@ -276,7 +277,6 @@ const BookingList = () => {
         }
       }
 
-      // Kiểm tra điều kiện trước khi check-out
       if (action === 'checkout') {
         console.log('Checking check-out conditions...');
         if (booking.actualCheckInTime === null) {
@@ -286,13 +286,11 @@ const BookingList = () => {
           throw new Error('Đặt phòng này đã được check-out trước đó.');
         }
 
-        // Kiểm tra nếu ngày check-out thực tế đã vượt quá ngày check-out dự kiến
         const checkOutDate = new Date(booking.checkOutDate);
         const currentDate = new Date();
         if (currentDate > checkOutDate) {
           const lateDays = Math.ceil((currentDate - checkOutDate) / (1000 * 60 * 60 * 24));
           console.log(`Check-out muộn ${lateDays} ngày so với dự kiến.`);
-          // Có thể thêm logic tính phí phạt nếu cần
         }
       }
 
@@ -307,10 +305,8 @@ const BookingList = () => {
       });
 
       console.log('API response:', response.data);
-      // Kiểm tra response từ backend
       if (response.data.code === 200 && response.data.data === true) {
         console.log('Check-in/Check-out successful, updating state...');
-        // Cập nhật trạng thái và thời gian trong frontend
         setBookings((prev) =>
           prev.map((b) =>
             b.bookingId === booking.bookingId
@@ -324,16 +320,13 @@ const BookingList = () => {
           )
         );
 
-        // Cập nhật trạng thái thanh toán hiển thị
         setBookingPaymentStatuses((prev) => ({
           ...prev,
           [booking.bookingId]: action === 'checkin' ? 'Đã xác nhận' : 'Đã hoàn thành',
         }));
 
-        // Xóa đặt phòng khỏi danh sách filteredBookings
         setFilteredBookings((prev) => prev.filter((b) => b.bookingId !== booking.bookingId));
 
-        // Làm mới danh sách bookings từ backend để đảm bảo đồng bộ
         console.log('Refreshing bookings from backend...');
         const refreshResponse = await axios.get('http://localhost:5053/api/bookings', {
           headers: { Authorization: `Bearer ${token}` },
@@ -341,7 +334,6 @@ const BookingList = () => {
         console.log('Refreshed bookings:', refreshResponse.data.data);
         setBookings(refreshResponse.data.data);
 
-        // Hiển thị thông báo thành công từ backend
         alert(`${action === 'checkin' ? 'Check-in' : 'Check-out'} thành công: ${response.data.message}`);
       } else {
         throw new Error(response.data.message || 'Hành động không thành công do lỗi từ server.');
@@ -375,6 +367,51 @@ const BookingList = () => {
     const hours = String(date.getHours()).padStart(2, '0');
     const minutes = String(date.getMinutes()).padStart(2, '0');
     return `${day}/${month}/${year} ${hours}:${minutes}`;
+  };
+
+  const customTextFieldStyle = {
+    ...textFieldStyle,
+    '& .MuiOutlinedInput-root': {
+      ...textFieldStyle['& .MuiOutlinedInput-root'],
+      '&.Mui-focused fieldset': {
+        borderColor: 'blue',
+      },
+    },
+  };
+
+  const dialogStyle = {
+    '& .MuiDialog-paper': {
+      minWidth: '800px',
+      borderRadius: '12px',
+      boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)',
+      padding: '16px',
+    },
+  };
+
+  const confirmButtonStyle = {
+    backgroundColor: action === 'checkin' ? '#1976d2' : '#d81b60',
+    color: '#fff',
+    padding: '8px 16px',
+    borderRadius: '8px',
+    textTransform: 'none',
+    fontWeight: 'bold',
+    fontSize: '14px',
+    '&:hover': {
+      backgroundColor: action === 'checkin' ? '#1565c0' : '#c2185b',
+      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
+    },
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  };
+
+  const cancelButtonStyle = {
+    color: '#757575',
+    textTransform: 'none',
+    fontSize: '14px',
+    '&:hover': {
+      backgroundColor: '#f5f5f5',
+    },
   };
 
   return (
@@ -442,26 +479,33 @@ const BookingList = () => {
         </TableBody>
       </Table>
 
-      <Dialog open={openDialog} onClose={handleCloseDialog} sx={{ '& .MuiDialog-paper': { minWidth: '600px' } }}>
-        <DialogTitle>Nhập số điện thoại để {action === 'checkin' ? 'Check-in' : 'Check-out'}</DialogTitle>
-        <DialogContent>
+      <Dialog open={openDialog} onClose={handleCloseDialog} sx={dialogStyle}>
+        <DialogTitle sx={{ fontSize: '24px', fontWeight: 'bold', textAlign: 'center', color: '#1976d2' }}>
+          {action === 'checkin' ? 'Check-in Khách Hàng' : 'Check-out Khách Hàng'}
+        </DialogTitle>
+        <DialogContent sx={{ padding: '24px' }}>
           <MuiTextField
             label="Số điện thoại"
             value={phoneNumber}
             onChange={(e) => setPhoneNumber(e.target.value)}
             fullWidth
             style={{ marginTop: '10px', marginBottom: '20px' }}
+            sx={{
+              ...customTextFieldStyle,
+              '& .MuiInputLabel-root': { fontSize: '16px', color: '#424242' },
+              '& .MuiOutlinedInput-input': { fontSize: '16px' },
+            }}
           />
-          {filteredBookings.length > 0 && (
-            <Table sx={{ minWidth: 550 }}>
+          {filteredBookings.length > 0 ? (
+            <Table sx={{ minWidth: 700 }}>
               <TableHead>
                 <TableRow>
-                  <TableCell>Mã đặt phòng</TableCell>
-                  <TableCell>Mã khách hàng</TableCell>
-                  <TableCell>Mã phòng</TableCell>
-                  <TableCell>Ngày nhận phòng</TableCell>
-                  <TableCell>Ngày nhận phòng thực tế</TableCell>
-                  <TableCell>Hành động</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>Mã đặt phòng</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>Mã khách hàng</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>Mã phòng</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>Ngày nhận phòng</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>Ngày nhận phòng thực tế</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>Hành động</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -475,11 +519,11 @@ const BookingList = () => {
                     <TableCell>
                       <MuiButton
                         variant="contained"
-                        color="primary"
-                        size="small"
+                        sx={confirmButtonStyle}
                         onClick={() => handleConfirmAction(booking)}
                         disabled={!isAdmin}
                       >
+                        <CheckCircleOutline fontSize="small" />
                         {action === 'checkin' ? 'Xác nhận Check-in' : 'Xác nhận Check-out'}
                       </MuiButton>
                     </TableCell>
@@ -487,27 +531,50 @@ const BookingList = () => {
                 ))}
               </TableBody>
             </Table>
+          ) : (
+            <Typography sx={{ textAlign: 'center', color: '#757575', marginTop: '20px' }}>
+              Không tìm thấy đặt phòng phù hợp.
+            </Typography>
           )}
         </DialogContent>
-        <DialogActions>
-          <MuiButton onClick={handleCloseDialog}>Hủy</MuiButton>
-          <MuiButton onClick={handleSearch}>Tìm kiếm</MuiButton>
+        <DialogActions sx={{ padding: '16px 24px', justifyContent: 'space-between' }}>
+          <MuiButton onClick={handleCloseDialog} sx={cancelButtonStyle}>
+            <Cancel fontSize="small" sx={{ marginRight: '8px' }} />
+            Hủy
+          </MuiButton>
+          <MuiButton
+            onClick={handleSearch}
+            variant="contained"
+            sx={{
+              backgroundColor: '#388e3c',
+              color: '#fff',
+              padding: '8px 16px',
+              borderRadius: '8px',
+              textTransform: 'none',
+              fontWeight: 'bold',
+              '&:hover': { backgroundColor: '#2e7d32' },
+            }}
+          >
+            Tìm kiếm
+          </MuiButton>
         </DialogActions>
       </Dialog>
 
       {paymentDialog && selectedBooking && (
-        <Dialog open={paymentDialog} onClose={handleClosePaymentDialog} sx={{ '& .MuiDialog-paper': { minWidth: '800px' } }}>
-          <DialogTitle>Chi tiết thanh toán – {selectedBooking.bookingId}</DialogTitle>
-          <DialogContent>
+        <Dialog open={paymentDialog} onClose={handleClosePaymentDialog} sx={dialogStyle}>
+          <DialogTitle sx={{ fontSize: '24px', fontWeight: 'bold', textAlign: 'center', color: '#1976d2' }}>
+            Chi tiết thanh toán – {selectedBooking.bookingId}
+          </DialogTitle>
+          <DialogContent sx={{ padding: '24px' }}>
             {paymentHistory.length > 0 ? (
               <Table sx={{ minWidth: 750 }}>
                 <TableHead>
                   <TableRow>
-                    <TableCell>ID Thanh toán</TableCell>
-                    <TableCell>Ngày</TableCell>
-                    <TableCell>Số tiền</TableCell>
-                    <TableCell>Phương thức</TableCell>
-                    <TableCell>Trạng thái</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold' }}>ID Thanh toán</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold' }}>Ngày</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold' }}>Số tiền</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold' }}>Phương thức</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold' }}>Trạng thái</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -526,8 +593,8 @@ const BookingList = () => {
               <div>Không có lịch sử thanh toán.</div>
             )}
           </DialogContent>
-          <DialogActions>
-            <MuiButton onClick={handleClosePaymentDialog}>Đóng</MuiButton>
+          <DialogActions sx={{ padding: '16px 24px' }}>
+            <MuiButton onClick={handleClosePaymentDialog} sx={cancelButtonStyle}>Đóng</MuiButton>
           </DialogActions>
         </Dialog>
       )}

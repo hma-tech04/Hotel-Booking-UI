@@ -16,6 +16,7 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { styled } from '@mui/system';
+import { textFieldStyle } from '../../styles/RoomList.css'; // Import style từ RoomList.css
 
 // Giao diện giữ nguyên
 const StyledCard = styled(Card)(({ theme }) => ({
@@ -127,6 +128,22 @@ const RevenueStatistics = () => {
     }
   };
 
+  // Kết hợp textFieldStyle với các thuộc tính sx hiện có
+  const customTextFieldStyle = {
+    ...textFieldStyle, // Áp dụng style từ RoomList.css
+    backgroundColor: '#fff', // Giữ màu nền trắng của container (không phải nền của input)
+    borderRadius: '8px',
+    '& .MuiInputBase-root': {
+      ...textFieldStyle['& .MuiInputBase-root'],
+      borderRadius: '8px',
+      height: '60px',
+      fontSize: '1.2rem',
+    },
+    '& .MuiInputLabel-root': {
+      fontSize: '1.1rem',
+    },
+  };
+
   return (
     <Box sx={{ padding: '40px', backgroundColor: '#f0f4f8', minHeight: '100vh' }}>
       <Typography
@@ -151,12 +168,7 @@ const RevenueStatistics = () => {
             fullWidth
             value={selectedMonth}
             onChange={handleMonthChange}
-            sx={{
-              backgroundColor: '#fff',
-              borderRadius: '8px',
-              '& .MuiInputBase-root': { borderRadius: '8px', height: '60px', fontSize: '1.2rem' },
-              '& .MuiInputLabel-root': { fontSize: '1.1rem' },
-            }}
+            sx={customTextFieldStyle} // Sử dụng style tùy chỉnh
           />
         </Grid>
         <Grid item xs={12} sm={5}>
@@ -166,12 +178,7 @@ const RevenueStatistics = () => {
             fullWidth
             value={selectedYear}
             onChange={handleYearChange}
-            sx={{
-              backgroundColor: '#fff',
-              borderRadius: '8px',
-              '& .MuiInputBase-root': { borderRadius: '8px', height: '60px', fontSize: '1.2rem' },
-              '& .MuiInputLabel-root': { fontSize: '1.1rem' },
-            }}
+            sx={customTextFieldStyle} // Sử dụng style tùy chỉnh
           />
         </Grid>
         <Grid item xs={12} sm={2}>
