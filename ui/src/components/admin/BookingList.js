@@ -381,7 +381,7 @@ const BookingList = () => {
 
   const dialogStyle = {
     '& .MuiDialog-paper': {
-      minWidth: '800px',
+      minWidth: '1000px',
       borderRadius: '12px',
       boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)',
       padding: '16px',
@@ -436,8 +436,8 @@ const BookingList = () => {
           <TableRow>
             <TableCell>Mã phòng</TableCell>
             <TableCell>Mã khách hàng</TableCell>
-            <TableCell>Ngày nhận phòng</TableCell>
-            <TableCell>Ngày trả phòng</TableCell>
+            <TableCell>Ngày nhận phòng (dự kiến)</TableCell>
+            <TableCell>Ngày trả phòng (dự kiến)</TableCell>
             <TableCell>Ngày nhận phòng thực tế</TableCell>
             <TableCell>Ngày trả phòng thực tế</TableCell>
             <TableCell>Trạng thái</TableCell>
@@ -523,7 +523,6 @@ const BookingList = () => {
                         onClick={() => handleConfirmAction(booking)}
                         disabled={!isAdmin}
                       >
-                        <CheckCircleOutline fontSize="small" />
                         {action === 'checkin' ? 'Xác nhận Check-in' : 'Xác nhận Check-out'}
                       </MuiButton>
                     </TableCell>
