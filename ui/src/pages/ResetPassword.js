@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/style.css';
 import '../styles/resetpassword.css';
-import { useAuthToken } from '../Utils/useAuthToken'; // Import useAuthToken với đường dẫn đúng
+import { useAuthToken } from '../useAuthToken'; // Import useAuthToken với đường dẫn đúng
 
 const API_URL = 'http://localhost:5053';
 

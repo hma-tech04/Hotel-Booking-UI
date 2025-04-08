@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuthToken } from '../../Utils/useAuthToken';
+import { useAuthToken } from '../../useAuthToken';
 import {
   Button as MuiButton,
   Dialog,

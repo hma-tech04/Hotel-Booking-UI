@@ -4,7 +4,7 @@ import "../styles/booking-page.css";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
-import { useAuthToken } from "../Utils/useAuthToken"; // Import useAuthToken với đường dẫn đúng
+import { useAuthToken } from "../useAuthToken"; // Import useAuthToken với đường dẫn đúng
 
 function BookingPage() {
   const navigate = useNavigate();

@@ -17,7 +17,7 @@ import {
 } from '@mui/material';
 import { styled } from '@mui/system';
 import { textFieldStyle } from '../../styles/RoomList.css'; // Import style từ RoomList.css
-import { useAuthToken } from '../../Utils/useAuthToken'; // Import useAuthToken
+import { useAuthToken } from '../../useAuthToken'; // Import useAuthToken
 
 // Giao diện giữ nguyên
 const StyledCard = styled(Card)(({ theme }) => ({

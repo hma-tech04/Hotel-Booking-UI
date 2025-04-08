@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
+import { useAuthToken } from '../useAuthToken';// Lên một cấp để trỏ về src/AuthContext.js
 import '../styles/style.css';
-import { useAuthToken } from '../Utils/useAuthToken'; // Import useAuthToken
 
 function Header({ isAdmin, updateAdminStatus }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -13,72 +13,75 @@ function Header({ isAdmin, updateAdminStatus }) {
   const navigate = useNavigate();
   const location = useLocation();
   const dropdownRef = useRef(null);
-  const { accessToken } = useAuthToken(); // Lấy accessToken từ useAuthToken
+  const { accessToken, resetToken } = useAuthToken();
 
   useEffect(() => {
-    if (accessToken && !isLoggedIn) {
+    console.log('Header useEffect - accessToken:', accessToken);
+
+    if (accessToken) {
       try {
         const decodedToken = jwtDecode(accessToken);
-        console.log('Decoded token:', decodedToken);
         const exp = decodedToken.exp * 1000;
-        if (Date.now() >= exp) {
-          throw new Error('Token đã hết hạn');
+        const now = Date.now();
+
+        if (now >= exp) {
+          console.log('Token đã hết hạn');
+          setIsLoggedIn(false);
+          setUsername('');
+          setUserInfo(null);
+          setIsDropdownOpen(false);
+          setIsProfileDropdownOpen(false);
+          resetToken();
+          return;
         }
+
         setIsLoggedIn(true);
         const userId = decodedToken.nameid;
-        if (!userId) {
-          throw new Error('Không tìm thấy nameid trong token');
-        }
-        if (!userInfo) {
-          fetchUserInfo(userId);
-        }
+        if (!userId) throw new Error('Không tìm thấy nameid trong token');
+
+        if (!userInfo) fetchUserInfo(userId);
+
         const userName = decodedToken.given_name || decodedToken.username || decodedToken.email || 'Unknown';
         setUsername(isAdmin ? 'Admin' : userName);
         setUserInfo(decodedToken);
+
         if (typeof updateAdminStatus === 'function') {
           updateAdminStatus(accessToken);
         }
       } catch (error) {
-        console.error('Error decoding token in Header:', error.message);
+        console.error('Error decoding token:', error.message);
         setIsLoggedIn(false);
         setUsername('');
         setUserInfo(null);
-        localStorage.removeItem('token');
+        setIsDropdownOpen(false);
+        setIsProfileDropdownOpen(false);
+        resetToken();
       }
-    } else if (!accessToken && isLoggedIn) {
+    } else {
+      console.log('No accessToken, resetting state');
       setIsLoggedIn(false);
       setUsername('');
       setUserInfo(null);
+      setIsDropdownOpen(false);
+      setIsProfileDropdownOpen(false);
       if (typeof updateAdminStatus === 'function') {
         updateAdminStatus(null);
       }
     }
-  }, [isAdmin, isLoggedIn, updateAdminStatus, accessToken]); // Thêm accessToken vào dependencies
+  }, [accessToken, isAdmin, updateAdminStatus]);
 
   const fetchUserInfo = async (userId) => {
     try {
       const response = await fetch(`http://localhost:5053/api/user/id/${userId}`, {
         headers: {
-          'Authorization': `Bearer ${accessToken}`, // Sử dụng accessToken
+          'Authorization': `Bearer ${accessToken}`,
         },
       });
-      if (!response.ok) {
-        const text = await response.text();
-        let errorMessage = 'Không thể lấy thông tin người dùng';
-        try {
-          const errorData = JSON.parse(text);
-          errorMessage = errorData.message || errorMessage;
-        } catch {
-          errorMessage = text || errorMessage;
-        }
-        throw new Error(`${errorMessage} (Status: ${response.status})`);
-      }
+      if (!response.ok) throw new Error('Không thể lấy thông tin người dùng');
       const result = await response.json();
       if (result.code === 200 && result.data) {
         setUserInfo(result.data);
         setUsername(isAdmin ? 'Admin' : result.data.fullName);
-      } else {
-        throw new Error(result.message || 'Dữ liệu trả về không hợp lệ');
       }
     } catch (error) {
       console.error('Failed to fetch user info:', error.message);
@@ -108,8 +111,13 @@ function Header({ isAdmin, updateAdminStatus }) {
   };
 
   const handleLogout = () => {
+    console.log('Logging out...');
+    resetToken();
     setIsLoggedIn(false);
-    localStorage.removeItem('token');
+    setUsername('');
+    setUserInfo(null);
+    setIsDropdownOpen(false);
+    setIsProfileDropdownOpen(false);
     if (typeof updateAdminStatus === 'function') {
       updateAdminStatus(null);
     }
@@ -117,9 +125,7 @@ function Header({ isAdmin, updateAdminStatus }) {
   };
 
   const isAdminRoute = location.pathname.startsWith('/admin');
-  if (isAdminRoute) {
-    return null;
-  }
+  if (isAdminRoute) return null;
 
   return (
     <header className="header">
@@ -129,12 +135,10 @@ function Header({ isAdmin, updateAdminStatus }) {
             <img src="/images/logo.png" alt="Hotel Logo" />
           </Link>
           <ul className="nav-menu">
-            <li><Link to="/" className="nav-link" onClick={() => console.log('Home clicked in Header')}>Trang Chủ</Link></li>
+            <li><Link to="/" className="nav-link">Trang Chủ</Link></li>
             <li><Link to="/rooms" className="nav-link">Xem phòng</Link></li>
             {isAdmin && (
-              <li>
-                <Link to="/admin" className="nav-link">Admin</Link>
-              </li>
+              <li><Link to="/admin" className="nav-link">Admin</Link></li>
             )}
           </ul>
           <div className="nav-link-dropdown" ref={dropdownRef}>
@@ -145,20 +149,7 @@ function Header({ isAdmin, updateAdminStatus }) {
             </button>
             {isDropdownOpen && (
               <ul className="dropdown-menu">
-                {!isLoggedIn ? (
-                  <>
-                    <li>
-                      <Link to="/login" className="nav-link" onClick={() => setIsDropdownOpen(false)}>
-                        Login
-                      </Link>
-                    </li>
-                    <li>
-                      <Link to="/register" className="nav-link" onClick={() => setIsDropdownOpen(false)}>
-                        Register
-                      </Link>
-                    </li>
-                  </>
-                ) : (
+                {isLoggedIn ? (
                   <>
                     <li className="profile-item">
                       <span className="nav-link greeting" onClick={toggleProfileDropdown}>
@@ -173,14 +164,7 @@ function Header({ isAdmin, updateAdminStatus }) {
                           <li>Role: {userInfo.role || 'Not available'}</li>
                           <li>Created: {userInfo.createdDate ? new Date(userInfo.createdDate).toLocaleDateString() : 'Not available'}</li>
                           <li>
-                            <Link
-                              to="/edit-profile"
-                              className="nav-link"
-                              onClick={() => {
-                                setIsDropdownOpen(false);
-                                setIsProfileDropdownOpen(false);
-                              }}
-                            >
+                            <Link to="/edit-profile" className="nav-link" onClick={() => setIsDropdownOpen(false)}>
                               Edit Profile
                             </Link>
                           </li>
@@ -189,25 +173,27 @@ function Header({ isAdmin, updateAdminStatus }) {
                     </li>
                     {!isAdmin && (
                       <li>
-                        <Link
-                          to="/booking-management"
-                          className="nav-link"
-                          onClick={() => setIsDropdownOpen(false)}
-                        >
+                        <Link to="/booking-management" className="nav-link" onClick={() => setIsDropdownOpen(false)}>
                           Booking Management
                         </Link>
                       </li>
                     )}
                     <li>
-                      <Link
-                        to="/"
-                        className="nav-link"
-                        onClick={() => {
-                          handleLogout();
-                          setIsDropdownOpen(false);
-                        }}
-                      >
+                      <button className="nav-link" onClick={handleLogout}>
                         Logout
+                      </button>
+                    </li>
+                  </>
+                ) : (
+                  <>
+                    <li>
+                      <Link to="/login" className="nav-link" onClick={() => setIsDropdownOpen(false)}>
+                        Login
+                      </Link>
+                    </li>
+                    <li>
+                      <Link to="/register" className="nav-link" onClick={() => setIsDropdownOpen(false)}>
+                        Register
                       </Link>
                     </li>
                   </>

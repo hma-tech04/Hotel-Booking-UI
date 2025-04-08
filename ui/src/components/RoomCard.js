@@ -9,6 +9,15 @@ function RoomCard({ room }) {
   const price = room.price || 0;
   const isAvailable = room.isAvailable || false;
 
+  // Tạo đối tượng thông tin phòng để truyền qua state
+  const roomInfo = {
+    roomId: room.roomId,
+    thumbnailUrl: thumbnailUrl,
+    roomType: roomType,
+    price: price,
+    isAvailable: isAvailable,
+  };
+
   return (
     <div className="room-card">
       <Link to={`/room/${room.roomId}`}>
@@ -30,7 +39,8 @@ function RoomCard({ room }) {
         </p>
         <p>Trạng thái: {isAvailable ? "Còn trống" : "Đã đặt"}</p>
         <div className="button-group">
-          <Link to={`/booking-page/${room.roomId}`}>
+          {/* Chuyển hướng đến /booking-page và truyền roomData */}
+          <Link to={`/booking-page/${room.roomId}`} state={{ roomData: [roomInfo] }}>
             <button className="book-now-btn">Đặt Ngay</button>
           </Link>
           <Link to={`/room/${room.roomId}`}>

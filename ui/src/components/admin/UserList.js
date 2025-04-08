@@ -14,7 +14,7 @@ import {
   TableRow,
 } from '@mui/material';
 import { textFieldStyle } from '../../styles/RoomList.css'; // Import style từ RoomList.css
-import { useAuthToken } from '../../Utils/useAuthToken'; // Import useAuthToken
+import { useAuthToken } from '../../useAuthToken'; // Import useAuthToken
 
 const UserList = () => {
   const { accessToken } = useAuthToken(); // Lấy accessToken từ useAuthToken

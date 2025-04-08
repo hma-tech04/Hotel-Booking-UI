@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
+import { useAuthToken } from '../useAuthToken' // Lên một cấp để trỏ về src/AuthContext.js
 import '../styles/login.css';
 
 const clientId = "403757915006-h5db3tft1bmon6g7tsopr02gculscv2d.apps.googleusercontent.com";
@@ -9,13 +10,13 @@ function Login({ updateAdminStatus }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
+  const { updateToken } = useAuthToken();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Đảm bảo payload khớp với định dạng backend mong đợi (Email và Password)
       const payload = { Email: email, Password: password };
-      console.log('Payload gửi đi:', payload); // Logging để kiểm tra dữ liệu gửi đi
+      console.log('Payload gửi đi:', payload);
 
       const response = await fetch('https://localhost:7044/api/auth/login', {
         credentials: 'include',
@@ -24,29 +25,27 @@ function Login({ updateAdminStatus }) {
         body: JSON.stringify(payload),
       });
 
-      console.log('Mã trạng thái phản hồi:', response.status); // Logging mã trạng thái
-
+      console.log('Mã trạng thái phản hồi:', response.status);
       const data = await response.json();
-      console.log('Dữ liệu phản hồi:', data); // Logging dữ liệu phản hồi từ backend
+      console.log('Dữ liệu phản hồi:', data);
 
       if (response.ok && data.code === 200 && data.data?.accessToken) {
-        localStorage.setItem('token', data.data.accessToken);
+        updateToken(data.data.accessToken);
         updateAdminStatus(data.data.accessToken);
         console.log('Đăng nhập thành công, chuyển hướng đến /');
         navigate('/', { replace: true });
       } else {
-        // Hiển thị thông báo lỗi chi tiết hơn
         const errorMessage = data.message || 'Đăng nhập thất bại, vui lòng kiểm tra lại email hoặc mật khẩu.';
         alert(`Lỗi: ${errorMessage}`);
       }
     } catch (error) {
       console.error('Lỗi trong quá trình đăng nhập:', error);
-      alert('Đã xảy ra lỗi khi kết nối đến server. Vui lòng kiểm tra kết nối và thử lại sau.');
+      alert('Đã xảy ra lỗi khi kết nối đến server. Vui lòng thử lại sau.');
     }
   };
 
   const handleGoogleSuccess = async (response) => {
-    console.log('Đăng nhập Google thành công:', response);  
+    console.log('Đăng nhập Google thành công:', response);
     const googleToken = response.credential;
     const payload = { IdToken: googleToken };
     console.log('Payload gửi đến server:', payload);
@@ -64,7 +63,7 @@ function Login({ updateAdminStatus }) {
       console.log('Dữ liệu phản hồi từ server:', apiData);
 
       if (apiResponse.ok && apiData.code === 200 && apiData.data?.accessToken) {
-        localStorage.setItem('token', apiData.data.accessToken);
+        updateToken(apiData.data.accessToken);
         updateAdminStatus(apiData.data.accessToken);
         console.log('Đăng nhập Google thành công, chuyển hướng đến /');
         navigate('/', { replace: true });

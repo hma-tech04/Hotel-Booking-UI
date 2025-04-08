@@ -1,9 +1,7 @@
 // src/pages/MyBookings.js
 import React, { useState, useEffect } from 'react';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
 import '../styles/style.css';
-import { useAuthToken } from '../Utils/useAuthToken'; // Import useAuthToken với đường dẫn đúng
+import { useAuthToken } from '../useAuthToken'; // Import useAuthToken với đường dẫn đúng
 import { jwtDecode } from 'jwt-decode';
 import { useNavigate } from 'react-router-dom';
 
@@ -150,7 +148,6 @@ function MyBookings() {
           </tbody>
         </table>
       </div>
-      <Footer />
     </>
   );
 }

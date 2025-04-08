@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, Typography, Grid } from '@mui/material';
-import { useAuthToken } from '../../Utils/useAuthToken'; // Import useAuthToken
+import { useAuthToken } from '../../useAuthToken'; // Import useAuthToken
 
 const StatsCard = ({ title, value, bgColor, textColor }) => (
   <Card sx={{ margin: 1, padding: 2, backgroundColor: bgColor, color: textColor, borderRadius:  2, boxShadow: 2, minHeight: '150px' }}>

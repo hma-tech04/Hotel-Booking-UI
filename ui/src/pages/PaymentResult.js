@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "../styles/PaymentResult.css";
 import axios from "axios";
-import { useAuthToken } from '../Utils/useAuthToken'; // Import useAuthToken với đường dẫn đúng
+import { useAuthToken } from '../useAuthToken'; // Import useAuthToken với đường dẫn đúng
 
 function PaymentResult() {
   const location = useLocation();

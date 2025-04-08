@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
 import { CssBaseline } from '@mui/material';
+import { useAuthToken } from './useAuthToken'; // Trỏ đúng đến src/AuthContext.js
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Home from './pages/Home';
@@ -17,13 +18,14 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import HotelManagement from './HotelManagement';
 import EditProfile from './components/EditProfile';
-import PaymentResult from './pages/PaymentResult'; // Import PaymentResult
+import PaymentResult from './pages/PaymentResult';
 
 function App() {
-  const [isAdmin, setIsAdmin] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const { accessToken } = useAuthToken();
 
   const updateAdminStatus = (token) => {
     if (token) {
@@ -32,6 +34,7 @@ function App() {
         const role = decoded.role || decoded.Role || 'user';
         setIsAdmin(role.toLowerCase() === 'admin');
         setIsAuthenticated(true);
+        console.log('Admin status updated:', role.toLowerCase() === 'admin');
         if (location.pathname === '/login' || location.pathname === '/register') {
           navigate('/', { replace: true });
         }
@@ -45,41 +48,40 @@ function App() {
     } else {
       setIsAdmin(false);
       setIsAuthenticated(false);
+      console.log('Admin status reset');
     }
   };
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      updateAdminStatus(token);
+    console.log('App useEffect - accessToken:', accessToken);
+    if (accessToken) {
+      updateAdminStatus(accessToken);
     } else {
       setIsAuthenticated(false);
       setIsAdmin(false);
     }
-  }, [location.pathname]);
+  }, [accessToken]);
 
   const ProtectedRoute = ({ children }) => {
-    const token = localStorage.getItem('token');
-    if (!token || !isAuthenticated) {
+    if (!accessToken || !isAuthenticated) {
       return <Navigate to="/login" replace />;
     }
     return children;
   };
 
   const AdminRoute = ({ children }) => {
-    const token = localStorage.getItem('token');
-    if (!token || !isAuthenticated || !isAdmin) {
+    if (!accessToken || !isAuthenticated || !isAdmin) {
       return <Navigate to="/" replace />;
     }
     return children;
   };
 
   return (
-    <GoogleOAuthProvider clientId="403757915006-h5db3tft1bmon6g7tsopr02gculscv2d.apps.googleusercontent.com">
+    <GoogleOAuthProvider clientId="297963829947-t0gnsrpfcauqlh6dumpi5dph8q27k5ug.apps.googleusercontent.com">
       <div className="page-wrapper">
         <CssBaseline />
         <Header isAdmin={isAdmin} updateAdminStatus={updateAdminStatus} />
-        <main className="main-content" >
+        <main className="main-content">
           <div style={{ maxWidth: '1400px', margin: '0 auto', width: '100%' }}>
             <Routes>
               <Route path="/" element={<Home />} />
@@ -109,10 +111,7 @@ function App() {
                 path="/admin"
                 element={<AdminRoute><HotelManagement /></AdminRoute>}
               />
-              <Route
-                path="/payment-result"
-                element={<PaymentResult />} // Thêm route cho PaymentResult
-              />
+              <Route path="/payment-result" element={<PaymentResult />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </div>

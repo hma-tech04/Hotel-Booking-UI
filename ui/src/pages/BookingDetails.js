@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import "../styles/booking-detail.css";
-import { useAuthToken } from "../Utils/useAuthToken"; // Import useAuthToken với đường dẫn đúng
+import { useAuthToken } from "../useAuthToken"; // Import useAuthToken với đường dẫn đúng
 
 function BookingDetails() {
   const { bookingId } = useParams();

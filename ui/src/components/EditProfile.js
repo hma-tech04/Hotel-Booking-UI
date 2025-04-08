@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import '../styles/EditProfile.css';
 import backgroundImage from '../images/home1.jpg';
-import { useAuthToken } from '../Utils/useAuthToken'; // Import useAuthToken
+import { useAuthToken } from '../useAuthToken'; // Import useAuthToken
 
 function EditProfile() {
   const navigate = useNavigate();
