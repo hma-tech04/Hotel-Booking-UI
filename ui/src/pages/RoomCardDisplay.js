@@ -5,6 +5,7 @@ import "../styles/style.css";
 
 function RoomCardDisplay() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [confirmedSearchTerm, setConfirmedSearchTerm] = useState("");
   const [rooms, setRooms] = useState([]);
   const [filteredRooms, setFilteredRooms] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -13,15 +14,17 @@ function RoomCardDisplay() {
   const [totalPages, setTotalPages] = useState(1);
   const [checkInDate, setCheckInDate] = useState("");
   const [checkOutDate, setCheckOutDate] = useState("");
-  const roomsPerPage = 6; // Mỗi trang 6 phòng
+  const roomsPerPage = 6;
   const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5053";
 
-  const fetchRooms = async () => {
+  const fetchRooms = async (searchOverride = null) => {
     setLoading(true);
     setError(null);
 
     try {
       let baseUrl = `${API_BASE_URL}/api/rooms`;
+      let usePagination = true;
+      const searchQuery = searchOverride !== null ? searchOverride : confirmedSearchTerm;
 
       if (checkInDate && checkOutDate) {
         const checkIn = new Date(checkInDate);
@@ -40,31 +43,46 @@ function RoomCardDisplay() {
         }
 
         baseUrl = `${API_BASE_URL}/api/rooms/available/all?checkInDate=${checkInDate}&checkOutDate=${checkOutDate}`;
-      } else if (searchTerm.trim()) {
-        baseUrl = `${API_BASE_URL}/api/rooms/type/${encodeURIComponent(searchTerm)}`;
+        usePagination = false;
+      } else if (searchQuery.trim()) {
+        baseUrl = `${API_BASE_URL}/api/rooms/type/${encodeURIComponent(searchQuery)}`;
       }
 
-      // Thêm phân trang vào URL
-      const url = `${baseUrl}${baseUrl.includes('?') ? '&' : '?'}pageNumber=${currentPage}&pageSize=${roomsPerPage}`;
+      const url = usePagination
+        ? `${baseUrl}${baseUrl.includes("?") ? "&" : "?"}pageNumber=${currentPage}&pageSize=${roomsPerPage}`
+        : baseUrl;
 
-      console.log("Fetching URL:", url);
+      console.log("🌐 Fetching URL:", url);
       const response = await axios.get(url);
       const responseData = response.data;
+      console.log("✅ API response:", responseData);
 
-      const roomList = responseData.data?.data || [];
-      const totalPagesFromAPI = responseData.data?.totalPages || 1;
+      let allRooms = [];
 
-      if (roomList.length === 0) {
-        setRooms([]);
-        setFilteredRooms([]);
-        setTotalPages(0);
+      if (Array.isArray(responseData.data)) {
+        allRooms = responseData.data;
+      } else if (Array.isArray(responseData.data?.data)) {
+        allRooms = responseData.data.data;
       } else {
-        setRooms(roomList);
-        setFilteredRooms(roomList); // không slice nữa
-        setTotalPages(totalPagesFromAPI);
+        throw new Error("Định dạng dữ liệu từ API không hợp lệ.");
       }
 
+      if (!usePagination) {
+        const startIndex = (currentPage - 1) * roomsPerPage;
+        const endIndex = startIndex + roomsPerPage;
+        const pagedRooms = allRooms.slice(startIndex, endIndex);
+        setRooms(allRooms);
+        setFilteredRooms(pagedRooms);
+        setTotalPages(Math.ceil(allRooms.length / roomsPerPage));
+      } else {
+        const totalPagesFromAPI = responseData.data?.totalPages || 1;
+        setRooms(allRooms);
+        setFilteredRooms(allRooms);
+        setTotalPages(totalPagesFromAPI);
+      }
     } catch (err) {
+      console.error("❌ Lỗi khi gọi API:", err?.response || err);
+
       let errorMessage = "Không thể tải danh sách phòng. Vui lòng thử lại.";
       if (err.response) {
         if (err.response.status === 400) {
@@ -74,14 +92,14 @@ function RoomCardDisplay() {
         } else if (err.response.status === 500) {
           errorMessage = "Lỗi server. Vui lòng liên hệ quản trị viên.";
         }
-        console.error("API Error Response:", JSON.stringify(err.response.data, null, 2));
       } else if (err.message) {
         errorMessage = err.message;
       }
 
       setError(errorMessage);
+      setRooms([]);
       setFilteredRooms([]);
-      console.error("Error fetching rooms:", err.response || err);
+      setTotalPages(0);
     } finally {
       setLoading(false);
     }
@@ -89,17 +107,17 @@ function RoomCardDisplay() {
 
   useEffect(() => {
     fetchRooms();
-  }, [currentPage, checkInDate, checkOutDate, searchTerm]);
+  }, [currentPage, checkInDate, checkOutDate, confirmedSearchTerm]);
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
-    setCurrentPage(1);
   };
 
   const handleKeyPress = (e) => {
     if (e.key === "Enter") {
-      setCurrentPage(1);
-      fetchRooms();
+      setConfirmedSearchTerm(searchTerm); 
+      setCurrentPage(1);                
+      fetchRooms(searchTerm);          
     }
   };
 
