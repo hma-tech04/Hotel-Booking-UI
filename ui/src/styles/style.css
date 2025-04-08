@@ -1,0 +1,1008 @@
+
+
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@200;300;400;500;600;700;800;900&display=swap');
+/* Reset margin & padding */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Global styles */
+html, body {
+  font-family: 'Roboto Slab', serif;
+  scroll-behavior: smooth;
+}
+
+li {
+  list-style: none;
+}
+
+a {
+  text-decoration: none;
+}
+
+/* Container styles */
+.container {
+  max-width: 80%;
+  margin: auto;
+}
+
+/* Header styling - giảm chiều cao navbar */
+header {
+  margin-top: -20px;
+  height: 13vh;  /* Giảm chiều cao navbar */
+  background-color: #3e60f8;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.logo img {
+  width: 120px;
+}
+
+/* Navbar styling */
+header nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 10px;
+}
+
+/* Navbar Links on Desktop */
+header .nav-menu {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+header .nav-menu li {
+  margin-left: 2rem;
+}
+.nav-link:hover {
+  color: #C1B086;
+  transform: translateY(-3px);
+  transition: all 0.3s ease-in-out;
+}
+
+header .nav-menu li a {
+  font-size: 1.2rem;
+  font-weight: 400;
+  color: white;
+  transition: 0.5s;
+}
+
+header .nav-menu li a:hover {
+  color: #C1B086;
+}
+
+/* Dropdown Menu Styling */
+.nav-link-dropdown {
+  position: relative;
+}
+
+.dropdown-toggle {
+  background-color: transparent;
+  border: none;
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+}
+.dropdown-toggle:hover {
+  color: #C1B086;
+}
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  top: 100%;  /* Đảm bảo dropdown menu di chuyển xuống dưới */
+  left: 0;
+  background-color: #fff; /* Màu nền sáng cho dropdown */
+  color: #333; /* Màu chữ tối cho dễ nhìn */
+  padding: 10px 15px;  /* Điều chỉnh padding để tạo khoảng cách đẹp */
+  border-radius: 8px; /* Bo góc cho dropdown menu */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);  /* Bóng đổ nhẹ nhàng */
+  width: auto;  /* Kích thước tự động tùy thuộc vào nội dung */
+  max-width: 250px; /* Giới hạn chiều rộng tối đa */
+  opacity: 0;  /* Bắt đầu với menu ẩn */
+  transform: translateY(-20px);  /* Khởi đầu với vị trí hơi cao */
+  transition: opacity 0.3s ease, transform 0.3s ease; /* Hiệu ứng mượt mà */
+  z-index: 10;
+  border: 1px solid #ddd; /* Đường viền nhẹ cho menu */
+}
+
+.dropdown-menu li {
+  margin-bottom: 10px;
+}
+
+.dropdown-menu li a {
+  display: block;
+  color: #333; /* Màu chữ tối */
+  font-size: 1rem;
+  padding: 8px 12px;  /* Điều chỉnh padding để mục trong dropdown dễ bấm */
+  border-radius: 4px;  /* Bo góc cho các mục */
+  transition: background-color 0.3s ease, color 0.3s ease; /* Hiệu ứng chuyển màu nền */
+}
+
+.dropdown-menu li a:hover {
+  background-color: #f0f0f0; 
+  color: #C1B086;
+}
+
+/* Show dropdown when active */
+.nav-link-dropdown .dropdown-menu {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);  /* Di chuyển xuống vị trí chính */
+  transition: opacity 0.3s ease, transform 0.3s ease; /* Hiệu ứng mượt mà */
+}
+
+/* Navbar Links - For mobile (in case you want dropdown in smaller screens) */
+@media (max-width: 768px) {
+  .dropdown-menu {
+    width: 100%;  
+    max-width: none; /* Không giới hạn chiều rộng cho màn hình nhỏ */
+    left: 0;  /* Căn trái để menu không bị lệch */
+  }
+  .nav-link-dropdown {
+    display: block;
+  }
+}
+
+/*--------------header--------*/
+/*--------------home--------*/
+.home .image img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+}
+
+.home .text {
+  max-width: 50%;
+  color: white;
+  margin: 20% 0 0 10%;
+}
+
+.home h1 {
+  font-size: 80px;
+  font-weight: 400;
+}
+
+.home p {
+  font-weight: 400;
+  line-height: 25px;
+  font-family: sans-serif;
+  font-size: 17px;
+  margin: 50px 0 0 50px;
+}
+
+button {
+  padding: 20px 40px;
+  background: none;
+  outline: none;
+  border: 2px solid white;
+  border-radius: 50px;
+  color: white;
+  margin-top: 20px;
+}
+
+.home button {
+  margin-left: 50px;
+}
+
+.home .image_item {
+  position: absolute;
+  top: 20%;
+  right: 20%;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+}
+
+.home .image_item img {
+  width: 140px;
+  height: 94px;
+  margin: 10px;
+  transition: 0.5s;
+}
+
+.home .image_item img.active {
+  border: 2px solid white;
+}
+
+.home .box .text {
+  position: relative;
+}
+
+.home .box .text::after {
+  position: absolute;
+  content: 'H';
+  font-size: 500px;
+  top: -120%;
+  font-weight: bold;
+  opacity: 0.1;
+}
+
+/*--------------home--------*/
+
+/*--------------book--------*/
+.flex {
+  display: flex;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-gap: 30px;
+}
+
+/* Styling for the entire booking section */
+.book {
+  margin-top: 5%;
+  width: 100%;
+  color: white;
+  padding: 0;
+  background-color: #1a2a44; /* Màu nền tối hơn một chút để tạo độ sâu */
+  border-radius: 15px; /* Bo góc mềm mại hơn */
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3); /* Bóng đổ mạnh hơn để tạo chiều sâu */
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 40vh;
+  margin-left: auto;
+  margin-right: auto;
+  width: 80%;
+  max-width: 1200px;
+}   
+
+/* Styling for form container */
+.book .input {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr) 150px;
+  gap: 25px; /* Tăng khoảng cách giữa các trường để thoáng hơn */
+  background: #263760;
+  padding: 25px; /* Tăng padding để tạo không gian rộng rãi */
+  border-radius: 15px;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+}
+input, select {
+  width: 100%;
+  padding: 12px 15px; /* Điều chỉnh padding để trường nhỏ gọn hơn */
+  border: none; /* Bỏ viền mặc định */
+  outline: none;
+  background: #1f2a44; /* Màu nền tối hơn để tạo độ tương phản */
+  margin-top: 8px;
+  color: white;
+  font-size: 16px;
+  border-radius: 8px; /* Bo góc mềm mại hơn */
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2); /* Hiệu ứng lõm nhẹ */
+  transition: all 0.3s ease; /* Hiệu ứng mượt mà khi focus */
+}
+/* Styling for individual input fields */
+input {
+  width: 100%;
+  padding: 15px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  outline: none;
+  background: #263760;
+  margin-top: 10px;
+  color: white;
+  font-size: 16px;
+  border-radius: 5px;
+}
+
+input:focus, select:focus {
+  background: #2a3a5a; /* Màu nền sáng hơn khi focus */
+  box-shadow: 0 0 8px rgba(63, 156, 193, 0.5); /* Hiệu ứng sáng khi focus */
+}
+.book .box label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #d1d5db; /* Màu chữ nhạt hơn để tạo độ tương phản */
+}
+::placeholder {
+  color: #a3a9b5; /* Màu placeholder nhạt hơn */
+  font-size: 14px;
+}
+
+/* Styling for search button */
+.book .search {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  padding: 0;
+}
+
+.book .search input {
+  width: 100%;
+  padding: 12px 15px;
+  background: linear-gradient(135deg, #3f9cc1, #2c7fa6); /* Gradient cho nút Search */
+  color: white;
+  font-weight: bold;
+  font-size: 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  height: 48px; /* Đảm bảo chiều cao đồng nhất với input/select */
+  box-shadow: 0 4px 10px rgba(63, 156, 193, 0.3); /* Bóng đổ nhẹ cho nút */
+}
+
+.book .search input:hover {
+  background: linear-gradient(135deg, #2c7fa6, #1c5b7f); /* Gradient tối hơn khi hover */
+  transform: translateY(-2px); /* Hiệu ứng nâng nhẹ khi hover */
+  box-shadow: 0 6px 15px rgba(63, 156, 193, 0.4);
+}
+
+.book .search input:active {
+  background: linear-gradient(135deg, #1c5b7f, #144c6e);
+  transform: translateY(0); /* Trở lại vị trí ban đầu khi click */
+  box-shadow: 0 2px 5px rgba(63, 156, 193, 0.2);
+}
+
+/* Responsive Design - Mobile Devices */
+@media (max-width: 768px) {
+  .book .input {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    padding: 20px;
+  }
+
+  .book .search {
+    grid-column: span 2;
+  }
+
+  .book .search input {
+    width: 80%;
+    font-size: 16px;
+  }
+
+  .book {
+    padding: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .book .input {
+    grid-template-columns: 1fr;
+    gap: 15px;
+    padding: 15px;
+  }
+
+  .book .search {
+    grid-column: span 1;
+  }
+
+  .book .search input {
+    width: 90%;
+  }
+}
+
+/*--------------about--------*/
+.top {
+  margin-top: 10%;
+}
+
+.mtop {
+  margin-top: 5%;
+}
+
+.left, .right {
+  width: 50%;
+}
+
+.about {
+  margin-bottom: 50px;
+}
+
+.about .img {
+  position: relative;
+}
+
+.about .image1 {
+  width: 310px;
+  height: 450px;
+}
+
+.about .image2 {
+  width: 325px;
+  height: 220px;
+  position: absolute;
+  bottom: 5px;
+  z-index: 2;
+  right: 30%;
+}
+
+.heading {
+  position: relative;
+}
+
+.heading::after {
+  position: absolute;
+  top: 0;
+  left: 0;
+  content: '';
+  width: 100px;
+  height: 4px;
+  background: #C1B086;
+}
+
+.heading h5 {
+  font-weight: 400;
+  letter-spacing: 2px;
+  padding-top: 20px;
+  color: #5f5f5f;
+}
+
+.heading h2 {
+  font-size: 30px;
+  font-weight: 400;
+  margin: 20px 0 40px 0;
+  color: #222222;
+}
+
+.heading p {
+  margin-bottom: 20px;
+  line-height: 25px;
+  color: #5f5f5f;
+  margin: 0 0 20px 50px;
+}
+
+.heading .btn1 {
+  margin: 50px 0 20px 50px;
+}
+
+.btn1 {
+  background: #C1B086;
+  color: white;
+}
+
+/*--------------about--------*/
+
+/*--------------wrapper--------*/
+.wrapper {
+  background-image: url("../images/ami.jpg");
+  background-repeat: no-repeat;
+  background-size: cover;
+  width: 100%;
+  height: 480px;
+  position: relative;
+}
+
+.wrapper .text {
+  background: #3f9cc1;
+  padding: 50px;
+  width: 40%;
+  height: 600px;
+  position: absolute;
+  top: -13%;
+  right: 10%;
+  padding-top: 10%;
+  color: white;
+}
+
+.wrapper .content {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-row-gap: 30px;
+}
+
+.wrapper h2 {
+  font-weight: 400;
+}
+
+.wrapper p {
+  margin: 20px 0 50px 0;
+  line-height: 30px;
+}
+
+.wrapper i {
+  margin: 5px 20px 0 0;
+}
+
+/*--------------wrapper--------*/
+
+/*--------------room--------*/
+.flex1 {
+  display: flex;
+  justify-content: space-between;
+}
+
+.room .grid {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.room img {
+  width: 100%;
+  height: 100%;
+}
+
+.room .box {
+  box-shadow: 0 13px 43px 0 rgb(37 46 89/10%);
+}
+
+.room .text {
+  padding: 20px;
+}
+
+.room h3 {
+  font-weight: 400;
+  margin-bottom: 10px;
+}
+
+.room p span {
+  font-size: 12px;
+  color: grey;
+}
+
+.room p {
+  font-size: 20px;
+}
+
+/*--------------room--------*/
+
+/*--------------restaurant--------*/
+.restaurant img {
+  width: 100%;
+  height: 100%;
+}
+
+.restaurant .right {
+  padding: 50px 50px 50px 100px;
+}
+
+.restaurant h2 {
+  margin-bottom: 20px;
+  font-weight: 400;
+}
+
+.restaurant .text p {
+  margin-bottom: 50px;
+  line-height: 25px;
+}
+
+.accordionItem {
+  margin-top: 30px;
+}
+
+.accordionItem p {
+  font-size: 15px;
+  opacity: 0.8;
+  font-family: sans-serif;
+  line-height: 20px;
+}
+
+.accordionIHeading {
+  cursor: pointer;
+  width: 100%;
+  border-radius: 3px;
+  font-weight: 400;
+  font-size: 17px;
+  color: #C1B086;
+  margin-bottom: 20px;
+}
+
+.close .accordionItemContent {
+  height: 0px;
+  transition: height 1s ease-out;
+  transform: scaleY(0);
+  float: left;
+  display: block;
+  background-color: #fff;
+}
+
+.open .accordionItemContent {
+  padding: 30px;
+  background-color: #fff;
+  width: 100%;
+  margin: 0 0 10px 0;
+  display: block;
+  transform: scaleY(1);
+  transform-origin: top;
+  transition: transform 0.4s ease;
+  box-sizing: border-box;
+  box-shadow: 0 13px 43px 0 rgb(37 46 89 / 10%);
+}
+
+/*--------------restaurant--------*/
+
+/*--------------restaurant--------*/
+/*--------------gallary--------*/
+.gallary img {
+  width: 270px;
+  height: 350px;
+}
+
+.owl-carousel .owl-next,
+.owl-carousel .owl-prev {
+  height: 50px;
+  position: absolute;
+  width: 50px;
+  cursor: pointer;
+  top: 35%;
+  background: white !important;
+  transition: 0.5s;
+}
+
+.owl-carousel .owl-prev {
+  left: 33px;
+}
+
+.owl-carousel .owl-next {
+  right: 33px;
+}
+
+.owl-carousel .owl-next:hover,
+.owl-carousel .owl-prev:hover {
+  background: #C1B086 !important;
+}
+
+/*--------------gallary--------*/
+/*--------------map--------*/
+.map iframe {
+  width: 100%;
+}
+
+/*--------------map--------*/
+/*--------------footer--------*/
+footer {
+  background-color: #2575fc;
+  color: white;
+  padding: -20px 0;
+}
+.container.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* Chia đều thành 3 cột */
+  gap: 30px;
+}
+.box {
+  display: flex;
+  flex-direction: column;
+}
+footer h3 {
+  font-size: 1.5rem;
+  margin-bottom: 20px;
+  display: flex;
+}
+ul {
+  list-style: none;
+} 
+ul li {
+  margin-bottom: 10px;
+}
+footer li {
+  margin-bottom: 10px;
+  transition: 0.5s;
+}
+.payment img {
+  width: 40px;
+  height: 40px;
+}
+footer li:hover {
+  color: #C1B086;
+  cursor: pointer;
+}
+@media (max-width: 768px) {
+  .container.grid {
+    grid-template-columns: 1fr; /* Chuyển sang 1 cột khi màn hình nhỏ */
+  }
+}
+/*--------------footer--------*/
+@media only screen and (max-width:768px) {
+  .home .box .text {
+    max-width: 100%;
+  }
+
+  .home .box .text::after,
+  .home .image_item {
+    display: none;
+  }
+
+  .restaurant .container,
+  .about .container,
+  .book .container {
+    flex-direction: column;
+  }
+
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .book {
+    margin-top: 10%;
+    height: auto;
+  }
+
+  .book .search {
+    width: 100%;
+  }
+
+  .book .search input {
+    margin-top: 0;
+  }
+
+  .left, .right {
+    width: 100%;
+  }
+
+  .wrapper .text {
+    width: 80%;
+  }
+
+  .room {
+    margin-bottom: 100px;
+  }
+
+  .room .grid {
+    grid-template-columns: repeat(1, 1fr);
+  }
+
+  .restaurant .right {
+    padding: 0;
+    margin-top: 50px;
+  }
+
+  footer .payment {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media only screen and (max-width:768px) {
+  .grid {
+    grid-template-columns: repeat(1, 1fr);
+  }
+
+  .home .text {
+    margin: 10% 0 0 0;
+  }
+
+  .home h1 {
+    font-size: 40px;
+  }
+
+  .about p,
+  .home p {
+    margin: 50px 0 0 0;
+  }
+
+  .wrapper .text {
+    padding: 10px;
+    height: 600px;
+  }
+
+  .heading_top {
+    margin-top: 100px;
+  }
+
+  .heading_top button {
+    display: none;
+  }
+
+  .restaurant .flex {
+    flex-direction: column-reverse;
+  }
+}
+/* Container for Room Cards */
+.room .content {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-gap: 30px;
+}
+.room .content.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(330px, 330px)); 
+  gap: 20px;
+  justify-content: center; 
+  max-width: 960px; 
+  margin: 0 auto; 
+}
+.room-card {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.room-card .img img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+
+.room-card .text {
+  padding: 20px;
+  text-align: center;
+
+}
+
+.room-card h3 {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.room-card p {
+  font-size: 1rem;
+  color: #555;
+}
+
+.room-card .room-images {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.room-card .room-images img {
+  width: 50px;
+  height: 50px;
+  margin: 0 5px;
+  object-fit: cover;
+  border-radius: 5px;
+}
+
+.book-now-btn {
+  background-color: #2575fc;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  margin-top: 10px;
+  margin-right:15px;
+  transition: background-color 0.3s;
+}
+
+.book-now-btn:hover {
+  background-color: #022a6f;
+}
+/* Style cho thanh tìm kiếm */
+.search-bar {
+  margin: 20px 0;
+  text-align: center;
+}
+
+.search-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 420px; /* Giảm 30% từ 600px: 600 * 0.7 = 420px */
+  margin: 0 auto;
+}
+
+.search-input {
+  width: 100%;
+  padding: 8px 15px;
+  font-size: 16px;
+  line-height: 1.5;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #fff;
+  outline: none;
+  height: 36px;
+  box-sizing: border-box;
+}
+
+.search-input:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+}
+
+/* Style cho placeholder */
+.search-input::placeholder {
+  color: #999; /* Màu chữ placeholder */
+  opacity: 1; /* Đảm bảo placeholder hiển thị rõ */
+}
+
+/* Đảm bảo tương thích với các trình duyệt khác */
+.search-input::-webkit-input-placeholder {
+  color: #999;
+}
+.search-input::-moz-placeholder {
+  color: #999;
+}
+.search-input:-ms-input-placeholder {
+  color: #999;
+}
+
+/* Đảm bảo container và grid vẫn hoạt động tốt */
+.container {
+  padding: 0 20px;
+}
+
+.content.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+/* src/styles/style.css */
+
+/* Dropdown menu styles */
+.nav-link-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 10px;
+}
+
+.user-icon {
+  font-size: 20px;
+  color: #ffffff;
+}
+
+.dropdown-menu {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  min-width: 180px;
+  padding: 8px 0;
+  z-index: 1000;
+  list-style: none;
+}
+
+.dropdown-menu li {
+  padding: 0;
+}
+
+.nav-link {
+  display: block;
+  padding: 8px 15px;
+  color: #333;
+  text-decoration: none;
+  transition: background-color 0.2s;
+}
+
+.nav-link:hover {
+  background-color: #f5f5f5;
+}
+
+.greeting {
+  cursor: pointer;
+  font-weight: 500;
+}
+
+/* Profile dropdown styles */
+.profile-item {
+  position: relative;
+}
+
+.profile-dropdown {
+  position: absolute;
+  right: 100%; /* Đổi từ left: 100% sang right: 100% để mở sang trái */
+  top: 0;
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  padding: 10px;
+  min-width: 200px;
+  z-index: 1001;
+  list-style: none;
+  margin-right: 5px; /* Thêm khoảng cách giữa hai dropdown */
+}
+
+.profile-dropdown li {
+  padding: 5px 10px;
+  color: #666;
+  font-size: 14px;
+}
+
+.profile-dropdown .nav-link {
+  color: #1976d2;
+  padding: 5px 10px;
+}
+
+.profile-dropdown .nav-link:hover {
+  background-color: #e3f2fd;
+}

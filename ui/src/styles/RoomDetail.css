@@ -1,0 +1,173 @@
+/* RoomDetail.css */
+
+/* Container chính */
+.room-detail-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+/* Layout chính */
+.room-detail {
+  display: flex;
+  gap: 30px;
+  flex-wrap: wrap;
+  justify-content: space-between; /* Đảm bảo các phần được căn đều */
+}
+
+/* Container cho phần hình ảnh */
+.room-images {
+  flex: 1; /* Chiếm 50% chiều rộng */
+  min-width: 0; /* Ngăn phần tử bị tràn khi co nhỏ */
+}
+
+/* Container cho ảnh chính */
+.image-container {
+  position: relative;
+  width: 100%;
+  padding-bottom: 75%; /* Tỉ lệ 4:3 (3/4 = 75%) để giảm khoảng trống */
+}
+
+.main-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  object-fit: cover; /* Đảm bảo ảnh không bị méo */
+}
+
+/* CSS cho slider ảnh thumbnail */
+.image-slider {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 15px;
+  overflow-x: auto;
+  padding: 10px 0; /* Bỏ padding trái/phải vì không còn nút điều hướng */
+  scroll-behavior: smooth;
+}
+
+/* Container cho thumbnail */
+.thumbnail-container {
+  position: relative;
+  width: 100px;
+  padding-bottom: 75px; /* Tỉ lệ 4:3 (3/4 * 100px = 75px) */
+}
+
+.thumbnail {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: border 0.3s ease;
+}
+
+.thumbnail:hover {
+  border: 2px solid #2575fc;
+}
+
+.thumbnail.active {
+  border: 2px solid #2575fc;
+}
+
+/* Room info */
+.room-info {
+  flex: 1; /* Chiếm 50% chiều rộng */
+  min-width: 0; /* Ngăn phần tử bị tràn khi co nhỏ */
+  padding: 30px;
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.room-info h2 {
+  font-size: 32px;
+  color: #1a2a44;
+  margin-bottom: 10px;
+}
+
+.room-info .price {
+  font-size: 24px;
+  color: #e67e22;
+  font-weight: 600;
+  margin-bottom: 15px;
+}
+
+.room-info p {
+  font-size: 16px;
+  line-height: 1.6;
+  color: #34495e;
+  margin-bottom: 20px;
+}
+
+/* Room detail rows */
+.room-detail-row {
+  display: flex;
+  justify-content: space-between;
+  margin: 15px 0;
+}
+
+.room-detail-row .detail-label {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.room-detail-row .detail-value {
+  font-size: 16px;
+  color: #34495e;
+}
+
+/* Room actions */
+.room-actions {
+  margin-top: 30px;
+  display: flex;
+  gap: 15px;
+}
+
+.book-now-btn,
+.payment-btn {
+  padding: 12px 25px;
+  background-color: #e67e22;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  font-weight: 500;
+}
+
+.book-now-btn:hover,
+.payment-btn:hover {
+  background-color: #d35400;
+}
+
+/* Footer */
+.footer {
+  background-color: #34495e;
+  color: white;
+  padding: 20px;
+  text-align: center;
+  border-radius: 10px;
+  margin-top: 40px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .room-detail {
+    flex-direction: column; /* Chuyển thành cột khi màn hình nhỏ */
+  }
+  
+  .room-images,
+  .room-info {
+    flex: none; /* Hủy chia đều khi ở chế độ cột */
+    width: 100%; /* Chiếm toàn bộ chiều rộng */
+  }
+}

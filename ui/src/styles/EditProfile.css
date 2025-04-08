@@ -1,0 +1,106 @@
+/* src/styles/EditProfile.css */
+.page-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+  .form-group input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background: #fff;
+    color: #070303; /* Ví dụ: đổi thành màu đỏ */
+  }
+  .edit-profile-container {
+    max-width: 400px;
+    margin: 50px auto;
+    padding: 20px;
+    border-radius: 10px;
+    background: rgba(249, 249, 249, 0.9);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .edit-profile-container h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #333;
+  }
+  
+  .form-group {
+    margin-bottom: 15px;
+  }
+  
+  .form-group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #333;
+  }
+  
+  .form-group input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background: #fff;
+  }
+  
+  /* Style riêng cho input email */
+  .form-group input.email-input {
+    background: #00695c; /* Xanh nước biển đậm */
+    color: #fff; /* Chữ trắng để dễ đọc trên nền tối */
+  }
+  
+  /* Khi input bị disabled */
+  .form-group input:disabled {
+    background: #01070c; /* Màu mặc định cho các input disabled khác */
+  }
+  
+  
+  .save-button {
+    width: 100%;
+    padding: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.2s;
+  }
+  
+  .save-button:hover:not(:disabled) {
+    background-color: #45a049;
+  }
+  
+  .save-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+  }
+  
+  .error-message {
+    color: #d32f2f;
+    text-align: center;
+    margin-bottom: 15px;
+  }
+  .reset-password-button {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+  
+  .reset-password-button:hover {
+    background-color: #d32f2f;
+  }
+  
+  .reset-password-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+  }
