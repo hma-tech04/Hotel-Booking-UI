@@ -13,14 +13,15 @@ function RoomCardDisplay() {
   const [totalPages, setTotalPages] = useState(1);
   const [checkInDate, setCheckInDate] = useState("");
   const [checkOutDate, setCheckOutDate] = useState("");
-  const roomsPerPage = 6;
+  const roomsPerPage = 6; // Mỗi trang 6 phòng
   const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5053";
 
   const fetchRooms = async () => {
     setLoading(true);
     setError(null);
+
     try {
-      let url = `${API_BASE_URL}/api/rooms`;
+      let baseUrl = `${API_BASE_URL}/api/rooms`;
 
       if (checkInDate && checkOutDate) {
         const checkIn = new Date(checkInDate);
@@ -38,39 +39,31 @@ function RoomCardDisplay() {
           throw new Error("Ngày check-out phải sau ngày check-in.");
         }
 
-        url = `${API_BASE_URL}/api/rooms/available/all?checkInDate=${checkInDate}&checkOutDate=${checkOutDate}`;
+        baseUrl = `${API_BASE_URL}/api/rooms/available/all?checkInDate=${checkInDate}&checkOutDate=${checkOutDate}`;
       } else if (searchTerm.trim()) {
-        url = `${API_BASE_URL}/api/rooms/type/${encodeURIComponent(searchTerm)}`;
+        baseUrl = `${API_BASE_URL}/api/rooms/type/${encodeURIComponent(searchTerm)}`;
       }
+
+      // Thêm phân trang vào URL
+      const url = `${baseUrl}${baseUrl.includes('?') ? '&' : '?'}pageNumber=${currentPage}&pageSize=${roomsPerPage}`;
 
       console.log("Fetching URL:", url);
       const response = await axios.get(url);
       const responseData = response.data;
-      console.log("API Response:", responseData);
 
-      let allRooms;
-      if (responseData.data && Array.isArray(responseData.data.data)) {
-        allRooms = responseData.data.data;
-      } else if (Array.isArray(responseData.data)) {
-        allRooms = responseData.data;
-      } else {
-        throw new Error("Định dạng dữ liệu từ API không hợp lệ");
-      }
+      const roomList = responseData.data?.data || [];
+      const totalPagesFromAPI = responseData.data?.totalPages || 1;
 
-      console.log("Rooms data:", allRooms);
-      if (allRooms.length === 0) {
+      if (roomList.length === 0) {
         setRooms([]);
         setFilteredRooms([]);
         setTotalPages(0);
       } else {
-        setRooms(allRooms);
-        const startIndex = (currentPage - 1) * roomsPerPage;
-        const endIndex = startIndex + roomsPerPage;
-        const pagedRooms = allRooms.slice(startIndex, endIndex);
-        setFilteredRooms(pagedRooms);
-        setTotalPages(Math.ceil(allRooms.length / roomsPerPage));
-        console.log("Filtered rooms after update:", pagedRooms);
+        setRooms(roomList);
+        setFilteredRooms(roomList); // không slice nữa
+        setTotalPages(totalPagesFromAPI);
       }
+
     } catch (err) {
       let errorMessage = "Không thể tải danh sách phòng. Vui lòng thử lại.";
       if (err.response) {
@@ -85,6 +78,7 @@ function RoomCardDisplay() {
       } else if (err.message) {
         errorMessage = err.message;
       }
+
       setError(errorMessage);
       setFilteredRooms([]);
       console.error("Error fetching rooms:", err.response || err);
@@ -95,7 +89,7 @@ function RoomCardDisplay() {
 
   useEffect(() => {
     fetchRooms();
-  }, [checkInDate, checkOutDate, searchTerm, currentPage]);
+  }, [currentPage, checkInDate, checkOutDate, searchTerm]);
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
@@ -186,7 +180,6 @@ function RoomCardDisplay() {
         <div className="content grid">
           {filteredRooms.length > 0 ? (
             filteredRooms.map((room) => {
-              // Tạo đối tượng thông tin phòng để truyền qua state
               const roomInfo = {
                 roomId: room.roomId,
                 thumbnailUrl: room.thumbnailUrl
@@ -195,8 +188,8 @@ function RoomCardDisplay() {
                 roomType: room.roomType || "Loại Phòng Không Xác Định",
                 price: room.price || 0,
                 isAvailable: room.isAvailable || false,
-                checkInDate: checkInDate, // Thêm ngày check-in nếu có
-                checkOutDate: checkOutDate, // Thêm ngày check-out nếu có
+                checkInDate: checkInDate,
+                checkOutDate: checkOutDate,
               };
 
               return (
@@ -208,18 +201,16 @@ function RoomCardDisplay() {
                       onError={(e) => {
                         e.target.src =
                           "https://via.placeholder.com/300x200?text=Không+Có+Hình";
-                        console.error("Image load failed for:", room.thumbnailUrl);
                       }}
                     />
                   </div>
                   <div className="text">
                     <h3>{roomInfo.roomType}</h3>
                     <p>
-                      <h4>{roomInfo.price} VNĐ/ Đêm</h4> 
+                      <h4>{roomInfo.price} VNĐ/ Đêm</h4>
                     </p>
                     <p>Trạng thái: {roomInfo.isAvailable ? "Còn Trống" : "Đã Đặt"}</p>
                     <div className="button-group">
-                      {/* Chuyển hướng đến /booking-page và truyền roomData */}
                       <Link to={`/booking-page/${room.roomId}`} state={{ roomData: [roomInfo] }}>
                         <button className="book-now-btn">Đặt Ngay</button>
                       </Link>
@@ -236,7 +227,7 @@ function RoomCardDisplay() {
           )}
         </div>
 
-        {rooms.length > 0 && (
+        {totalPages > 0 && (
           <div className="pagination" style={{ marginTop: "20px", textAlign: "center" }}>
             <button
               onClick={handlePrevPage}

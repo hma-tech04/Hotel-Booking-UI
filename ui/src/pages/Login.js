@@ -4,7 +4,7 @@ import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import { useAuthToken } from '../useAuthToken' // Lên một cấp để trỏ về src/AuthContext.js
 import '../styles/login.css';
 
-const clientId = "403757915006-h5db3tft1bmon6g7tsopr02gculscv2d.apps.googleusercontent.com";
+const clientId = "297963829947-t0gnsrpfcauqlh6dumpi5dph8q27k5ug.apps.googleusercontent.com";
 
 function Login({ updateAdminStatus }) {
   const [email, setEmail] = useState('');
@@ -115,13 +115,14 @@ function Login({ updateAdminStatus }) {
               Đăng Nhập
             </button>
           </form>
-          <div className="google-login">
+          <div className="google-login-wrapper">
             <GoogleLogin
               onSuccess={handleGoogleSuccess}
               onError={handleGoogleFailure}
               scope="openid email profile"
             />
           </div>
+
           <div className="login-links">
             <p>
               Chưa có tài khoản? <a href="/register">Đăng ký</a>

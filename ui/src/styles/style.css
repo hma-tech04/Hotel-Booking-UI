@@ -1,14 +1,12 @@
 
 
 @import url('https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@200;300;400;500;600;700;800;900&display=swap');
-/* Reset margin & padding */
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
-/* Global styles */
 html, body {
   font-family: 'Roboto Slab', serif;
   scroll-behavior: smooth;
@@ -16,11 +14,11 @@ html, body {
 body {
   display: flex;
   flex-direction: column; 
-  min-height: 100vh; /* Chiều cao tối thiểu bằng 100% viewport */
+  min-height: 100vh;
 }
 .main-content {
-  flex: 1; /* Cho phép phần này mở rộng để đẩy footer xuống */
-  min-height: 80vh; /* Đảm bảo chiều cao tối thiểu, có thể điều chỉnh */
+  flex: 1;
+  min-height: 80vh; 
 }
 li {
   list-style: none;
@@ -36,10 +34,9 @@ a {
   margin: auto;
 }
 
-/* Header styling - giảm chiều cao navbar */
 header {
   margin-top: -20px;
-  height: 13vh;  /* Giảm chiều cao navbar */
+  height: 13vh; 
   background-color: #3e60f8;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
@@ -56,7 +53,6 @@ header nav {
   padding-top: 10px;
 }
 
-/* Navbar Links on Desktop */
 header .nav-menu {
   display: flex;
   justify-content: space-between;
@@ -83,7 +79,6 @@ header .nav-menu li a:hover {
   color: #C1B086;
 }
 
-/* Dropdown Menu Styling */
 .nav-link-dropdown {
   position: relative;
 }
@@ -104,20 +99,20 @@ header .nav-menu li a:hover {
 .dropdown-menu {
   display: none;
   position: absolute;
-  top: 100%;  /* Đảm bảo dropdown menu di chuyển xuống dưới */
+  top: 100%;  
   left: 0;
-  background-color: #fff; /* Màu nền sáng cho dropdown */
-  color: #333; /* Màu chữ tối cho dễ nhìn */
-  padding: 10px 15px;  /* Điều chỉnh padding để tạo khoảng cách đẹp */
-  border-radius: 8px; /* Bo góc cho dropdown menu */
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);  /* Bóng đổ nhẹ nhàng */
-  width: auto;  /* Kích thước tự động tùy thuộc vào nội dung */
-  max-width: 250px; /* Giới hạn chiều rộng tối đa */
-  opacity: 0;  /* Bắt đầu với menu ẩn */
-  transform: translateY(-20px);  /* Khởi đầu với vị trí hơi cao */
-  transition: opacity 0.3s ease, transform 0.3s ease; /* Hiệu ứng mượt mà */
+  background-color: #fff;
+  color: #333; 
+  padding: 10px 15px;  
+  border-radius: 8px; 
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); 
+  width: auto;  
+  max-width: 250px; 
+  opacity: 0; 
+  transform: translateY(-20px);  
+  transition: opacity 0.3s ease, transform 0.3s ease;
   z-index: 10;
-  border: 1px solid #ddd; /* Đường viền nhẹ cho menu */
+  border: 1px solid #ddd;
 }
 
 .dropdown-menu li {
@@ -126,11 +121,11 @@ header .nav-menu li a:hover {
 
 .dropdown-menu li a {
   display: block;
-  color: #333; /* Màu chữ tối */
+  color: #333;
   font-size: 1rem;
-  padding: 8px 12px;  /* Điều chỉnh padding để mục trong dropdown dễ bấm */
-  border-radius: 4px;  /* Bo góc cho các mục */
-  transition: background-color 0.3s ease, color 0.3s ease; /* Hiệu ứng chuyển màu nền */
+  padding: 8px 12px;  
+  border-radius: 4px;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .dropdown-menu li a:hover {
@@ -138,28 +133,24 @@ header .nav-menu li a:hover {
   color: #C1B086;
 }
 
-/* Show dropdown when active */
 .nav-link-dropdown .dropdown-menu {
   display: block;
   opacity: 1;
-  transform: translateY(0);  /* Di chuyển xuống vị trí chính */
-  transition: opacity 0.3s ease, transform 0.3s ease; /* Hiệu ứng mượt mà */
+  transform: translateY(0);
+  transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
-/* Navbar Links - For mobile (in case you want dropdown in smaller screens) */
 @media (max-width: 768px) {
   .dropdown-menu {
     width: 100%;  
-    max-width: none; /* Không giới hạn chiều rộng cho màn hình nhỏ */
-    left: 0;  /* Căn trái để menu không bị lệch */
+    max-width: none; 
+    left: 0; 
   }
   .nav-link-dropdown {
     display: block;
   }
 }
 
-/*--------------header--------*/
-/*--------------home--------*/
 .home .image img {
   position: absolute;
   top: 0;
@@ -228,7 +219,6 @@ button {
 
 .home .box .text::after {
   position: absolute;
-  content: 'H';
   font-size: 500px;
   top: -120%;
   font-weight: bold;

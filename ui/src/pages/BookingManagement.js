@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import { useAuthToken } from "../useAuthToken"; // Import useAuthToken với đường dẫn đúng
 import "../styles/booking.css";
-import Footer from "../components/Footer";
 
 function BookingManagement() {
   const { accessToken } = useAuthToken();

@@ -114,8 +114,8 @@ function RoomDetail() {
             <div className="room-info">
               <h2>{room.roomType}</h2>
               <p className="price">Giá: {room.price} VNĐ/ Đêm</p>
-              <p className="description">{room.description}</p>
-              <p className="availability">Status: {room.isAvailable ? "Available" : "Not Available"}</p>
+              <p className="description">Mô tả: {room.description}</p>
+              <p className="availability">Trạng thái: {room.isAvailable ? "Còn trống" : "Đã đặt"}</p>
 
               {/* Thông tin chi tiết */}
               <div className="room-details-grid">

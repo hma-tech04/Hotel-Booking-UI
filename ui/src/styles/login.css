@@ -21,6 +21,42 @@
     justify-content: center;
     align-items: center;
   }
+  .custom-google-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background-color: white;
+    color: #444;
+    border: 1px solid #ccc;
+    padding: 10px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: box-shadow 0.2s ease;
+    width: 100%;
+    margin-top: 16px;
+  }
+  
+  .custom-google-button:hover {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  }
+  .google-login-wrapper {
+    width: 100%;
+    margin-top: 16px;
+  }
+  
+  .google-login-wrapper > div {
+    width: 100% !important;     /* Ép chiều rộng */
+    display: flex !important;   /* Căn chỉnh */
+    justify-content: center;    /* Căn giữa nút trong khung */
+    max-width: 360px;           /* Hoặc đúng bằng nút Đăng Nhập */
+    margin: 0 auto;             /* Căn giữa toàn bộ */
+  }
+  .google-icon {
+    width: 20px;
+    height: 20px;
+  }
   
   /* Box Login */
   .login-box {
