@@ -193,14 +193,17 @@ const BookingList = () => {
       if (Array.isArray(filteredData)) {
         const filteredForAction =
           action === 'checkout'
-            ? filteredData.filter((booking) => booking.bookingStatus === 'Confirmed')
-            : filteredData.filter((booking) => booking.bookingStatus === 'Pending');
+            ? filteredData.filter(
+                (booking) => booking.actualCheckOutTime === null && booking.actualCheckInTime !== null
+              )
+            : filteredData.filter((booking) => booking.actualCheckInTime === null);
+        console.log('Filtered bookings for action:', filteredForAction);
         setFilteredBookings(filteredForAction);
         if (filteredForAction.length === 0) {
           setError(
             action === 'checkout'
-              ? 'Không tìm thấy phòng đã xác nhận để check-out với số điện thoại này.'
-              : 'Không tìm thấy đặt phòng đang chờ xử lý để check-in với số điện thoại này.'
+              ? 'Không tìm thấy phòng đã check-in nhưng chưa check-out với số điện thoại này.'
+              : 'Không tìm thấy phòng chưa check-in với số điện thoại này.'
           );
         }
       } else {
@@ -226,34 +229,70 @@ const BookingList = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      console.log('Full payment status response:', response.data); // Log toàn bộ phản hồi
+      console.log('Full payment status response:', response.data);
       const paymentData = response.data.data;
       console.log('Payment data:', paymentData);
 
       if (Array.isArray(paymentData) && paymentData.length > 0) {
         const latestPayment = paymentData[paymentData.length - 1];
         console.log('Latest payment:', latestPayment);
-        return latestPayment.status === 'Completed'; // Trả về true nếu đã thanh toán
+        const validPaymentStatuses = ['Pending', 'Completed', 'Failed', 'Cancelled'];
+        if (!validPaymentStatuses.includes(latestPayment.paymentStatus)) {
+          console.error(`Invalid payment status: ${latestPayment.paymentStatus}`);
+          return false;
+        }
+        const isCompleted = latestPayment.paymentStatus === 'Completed';
+        console.log(`Payment status for booking ${bookingId} is ${isCompleted ? 'Completed' : 'Not Completed'}`);
+        return isCompleted;
       }
       console.log('No payment records found for this booking.');
-      return false; // Chưa có thanh toán
+      return false;
     } catch (err) {
       console.error('Lỗi khi kiểm tra trạng thái thanh toán:', err.response || err);
-      return false; // Giả định chưa thanh toán nếu có lỗi
+      return false;
     }
   };
 
   const handleConfirmAction = async (booking) => {
     try {
+      console.log('Starting handleConfirmAction for booking:', booking);
       const token = localStorage.getItem('token');
       if (!token) throw new Error('Không tìm thấy token xác thực.');
 
-      // Kiểm tra trạng thái thanh toán trước khi check-in
+      // Kiểm tra trạng thái thanh toán trước khi check-in hoặc check-out
+      if (action === 'checkin' || action === 'checkout') {
+        const isCompleted = await checkPaymentStatus(booking.bookingId);
+        console.log(`Payment status for booking ${booking.bookingId}: ${isCompleted ? 'Completed' : 'Not Completed'}`);
+        if (!isCompleted) {
+          throw new Error(`Vui lòng hoàn tất thanh toán (trạng thái phải là "Completed") trước khi ${action === 'checkin' ? 'check-in' : 'check-out'}.`);
+        }
+      }
+
+      // Kiểm tra điều kiện trước khi check-in
       if (action === 'checkin') {
-        const isPaid = await checkPaymentStatus(booking.bookingId);
-        console.log(`Payment status for booking ${booking.bookingId}: ${isPaid ? 'Paid' : 'Not Paid'}`);
-        if (!isPaid) {
-          throw new Error('Vui lòng thanh toán booking trước khi check-in.');
+        console.log('Checking check-in conditions...');
+        if (booking.actualCheckInTime !== null) {
+          throw new Error('Đặt phòng này đã được check-in trước đó.');
+        }
+      }
+
+      // Kiểm tra điều kiện trước khi check-out
+      if (action === 'checkout') {
+        console.log('Checking check-out conditions...');
+        if (booking.actualCheckInTime === null) {
+          throw new Error('Đặt phòng này chưa được check-in.');
+        }
+        if (booking.actualCheckOutTime !== null) {
+          throw new Error('Đặt phòng này đã được check-out trước đó.');
+        }
+
+        // Kiểm tra nếu ngày check-out thực tế đã vượt quá ngày check-out dự kiến
+        const checkOutDate = new Date(booking.checkOutDate);
+        const currentDate = new Date();
+        if (currentDate > checkOutDate) {
+          const lateDays = Math.ceil((currentDate - checkOutDate) / (1000 * 60 * 60 * 24));
+          console.log(`Check-out muộn ${lateDays} ngày so với dự kiến.`);
+          // Có thể thêm logic tính phí phạt nếu cần
         }
       }
 
@@ -268,7 +307,10 @@ const BookingList = () => {
       });
 
       console.log('API response:', response.data);
-      if (response.data.data === true) {
+      // Kiểm tra response từ backend
+      if (response.data.code === 200 && response.data.data === true) {
+        console.log('Check-in/Check-out successful, updating state...');
+        // Cập nhật trạng thái và thời gian trong frontend
         setBookings((prev) =>
           prev.map((b) =>
             b.bookingId === booking.bookingId
@@ -281,15 +323,35 @@ const BookingList = () => {
               : b
           )
         );
+
+        // Cập nhật trạng thái thanh toán hiển thị
+        setBookingPaymentStatuses((prev) => ({
+          ...prev,
+          [booking.bookingId]: action === 'checkin' ? 'Đã xác nhận' : 'Đã hoàn thành',
+        }));
+
+        // Xóa đặt phòng khỏi danh sách filteredBookings
         setFilteredBookings((prev) => prev.filter((b) => b.bookingId !== booking.bookingId));
-        alert(`${action === 'checkin' ? 'Check-in' : 'Check-out'} thành công cho booking: ${booking.bookingId}`);
+
+        // Làm mới danh sách bookings từ backend để đảm bảo đồng bộ
+        console.log('Refreshing bookings from backend...');
+        const refreshResponse = await axios.get('http://localhost:5053/api/bookings', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        console.log('Refreshed bookings:', refreshResponse.data.data);
+        setBookings(refreshResponse.data.data);
+
+        // Hiển thị thông báo thành công từ backend
+        alert(`${action === 'checkin' ? 'Check-in' : 'Check-out'} thành công: ${response.data.message}`);
       } else {
-        throw new Error(response.data.Message || 'Hành động không thành công do lỗi từ server.');
+        throw new Error(response.data.message || 'Hành động không thành công do lỗi từ server.');
       }
     } catch (err) {
       const errorMessage =
         err.response?.status === 401
           ? 'Không có quyền: Bạn phải là admin để thực hiện hành động này.'
+          : err.response?.status === 404
+          ? `Không tìm thấy đặt phòng ${booking.bookingId}.`
           : err.message || `Không thể ${action === 'checkin' ? 'check-in' : 'check-out'} booking ${booking.bookingId}`;
       setError(errorMessage);
       console.error('Lỗi khi xác nhận:', err.response || err);
@@ -339,7 +401,8 @@ const BookingList = () => {
             <TableCell>Mã khách hàng</TableCell>
             <TableCell>Ngày nhận phòng</TableCell>
             <TableCell>Ngày trả phòng</TableCell>
-            <TableCell>Ngày giờ nhận phòng thực tế</TableCell>
+            <TableCell>Ngày nhận phòng thực tế</TableCell>
+            <TableCell>Ngày trả phòng thực tế</TableCell>
             <TableCell>Trạng thái</TableCell>
             <TableCell>Hành động</TableCell>
           </TableRow>
@@ -352,6 +415,7 @@ const BookingList = () => {
               <TableCell>{booking.checkInDate ? formatDate(booking.checkInDate) : 'N/A'}</TableCell>
               <TableCell>{booking.checkOutDate ? formatDate(booking.checkOutDate) : 'N/A'}</TableCell>
               <TableCell>{booking.actualCheckInTime ? formatDate(booking.actualCheckInTime) : 'N/A'}</TableCell>
+              <TableCell>{booking.actualCheckOutTime ? formatDate(booking.actualCheckOutTime) : 'N/A'}</TableCell>
               <TableCell>{bookingPaymentStatuses[booking.bookingId] || 'N/A'}</TableCell>
               <TableCell>
                 <MuiButton
@@ -396,7 +460,7 @@ const BookingList = () => {
                   <TableCell>Mã khách hàng</TableCell>
                   <TableCell>Mã phòng</TableCell>
                   <TableCell>Ngày nhận phòng</TableCell>
-                  <TableCell>Ngày giờ nhận thực tế</TableCell>
+                  <TableCell>Ngày nhận phòng thực tế</TableCell>
                   <TableCell>Hành động</TableCell>
                 </TableRow>
               </TableHead>

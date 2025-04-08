@@ -794,7 +794,14 @@ footer li:hover {
   grid-template-columns: repeat(3, 1fr);
   grid-gap: 30px;
 }
-
+.room .content.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(330px, 330px)); 
+  gap: 20px;
+  justify-content: center; 
+  max-width: 960px; 
+  margin: 0 auto; 
+}
 .room-card {
   background: #fff;
   border-radius: 8px;
