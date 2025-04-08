@@ -2,10 +2,12 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "../styles/PaymentResult.css";
 import axios from "axios";
+import { useAuthToken } from '../Utils/useAuthToken'; // Import useAuthToken với đường dẫn đúng
 
 function PaymentResult() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { accessToken } = useAuthToken(); // Sử dụng useAuthToken
   const [paymentInfo, setPaymentInfo] = useState({
     status: "",
     orderId: "",
@@ -14,12 +16,16 @@ function PaymentResult() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isSignatureValid, setIsSignatureValid] = useState(false); // Thêm state để kiểm tra chữ ký
+  const [isSignatureValid, setIsSignatureValid] = useState(false);
 
   useEffect(() => {
     const verifyPaymentResult = async () => {
       setLoading(true);
       try {
+        if (!accessToken) {
+          throw new Error("Không tìm thấy token. Vui lòng đăng nhập lại.");
+        }
+
         const queryParams = new URLSearchParams(location.search);
         const paymentStatus = queryParams.get("paymentStatus");
         const signature = queryParams.get("signature");
@@ -27,7 +33,6 @@ function PaymentResult() {
         const paymentId = queryParams.get("paymentId") || "";
         const amount = queryParams.get("amount") || "";
 
-        // Log dữ liệu từ backend qua URL
         console.log("Data from backend (URL params):", {
           paymentStatus,
           signature,
@@ -45,20 +50,18 @@ function PaymentResult() {
           { data: paymentStatus, Signature: signature },
           {
             headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
+              Authorization: `Bearer ${accessToken}`, // Sử dụng accessToken
               "Content-Type": "application/json",
             },
           }
         );
 
-        // Log phản hồi từ API verify-signature
         console.log("Verify-signature response from backend:", response.data);
 
         if (response.data.code !== 200 || !response.data.data) {
           throw new Error("Chữ ký không hợp lệ.");
         }
 
-        // Lưu trạng thái chữ ký
         setIsSignatureValid(response.data.data);
 
         const updatedPaymentInfo = {
@@ -76,7 +79,7 @@ function PaymentResult() {
     };
 
     verifyPaymentResult();
-  }, [location]);
+  }, [location, accessToken]); // Thêm accessToken vào dependencies
 
   const handleReturnHome = () => {
     navigate("/");
@@ -102,7 +105,6 @@ function PaymentResult() {
     );
   }
 
-  // Logic hiển thị: dựa trên paymentStatus và chữ ký
   const isSuccess = paymentInfo.status === "Payment successfully";
   const isUnclear = isSignatureValid && paymentInfo.status === "Payment Failed";
 

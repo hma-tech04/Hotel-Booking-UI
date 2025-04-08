@@ -1,9 +1,9 @@
-// src/components/admin/Dashboard.js
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, Typography, Grid } from '@mui/material';
+import { useAuthToken } from '../../Utils/useAuthToken'; // Import useAuthToken
 
 const StatsCard = ({ title, value, bgColor, textColor }) => (
-  <Card sx={{ margin: 1, padding: 2, backgroundColor: bgColor, color: textColor, borderRadius: 2, boxShadow: 2, minHeight: '150px' }}>
+  <Card sx={{ margin: 1, padding: 2, backgroundColor: bgColor, color: textColor, borderRadius:  2, boxShadow: 2, minHeight: '150px' }}>
     <CardContent>
       <Typography variant="h6" align="center" sx={{ fontWeight: '500', fontSize: '1.2rem' }}>{title}</Typography>
       <Typography variant="h3" align="center" sx={{ fontWeight: 'bold', fontSize: '2.5rem' }}>{value}</Typography>
@@ -12,22 +12,23 @@ const StatsCard = ({ title, value, bgColor, textColor }) => (
 );
 
 const Dashboard = () => {
+  const { accessToken } = useAuthToken(); // Lấy accessToken từ useAuthToken
   const [stats, setStats] = useState({ rooms: 0, users: 0, bookings: 0, revenue: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    if (!accessToken) {
+      setError('No token found. Please log in.');
+      setLoading(false); // Dừng loading nếu không có token
+      return;
+    }
+
     const fetchData = async () => {
       try {
-        // Lấy token từ localStorage
-        const token = localStorage.getItem('token');
-        if (!token) {
-          throw new Error('No token found in localStorage');
-        }
-
-        // Cấu hình headers cho tất cả các request
+        // Cấu hình headers với accessToken
         const headers = {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         };
 
@@ -82,7 +83,7 @@ const Dashboard = () => {
     };
 
     fetchData();
-  }, []);
+  }, [accessToken]); // Chạy lại khi accessToken thay đổi
 
   if (loading) {
     return <Typography align="center">Loading...</Typography>;

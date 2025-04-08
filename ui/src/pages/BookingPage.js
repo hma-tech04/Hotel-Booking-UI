@@ -4,11 +4,13 @@ import "../styles/booking-page.css";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
+import { useAuthToken } from "../Utils/useAuthToken"; // Import useAuthToken với đường dẫn đúng
 
 function BookingPage() {
   const navigate = useNavigate();
   const { roomId } = useParams();
-  
+  const { accessToken } = useAuthToken(); // Sử dụng useAuthToken
+
   const [roomData, setRoomData] = useState(null);
   const [formData, setFormData] = useState({
     UserId: "",
@@ -23,60 +25,66 @@ function BookingPage() {
   const [error, setError] = useState(null);
   const [bookingId, setBookingId] = useState(null);
   const [isPaid, setIsPaid] = useState(false);
+  const [isRoomAvailable, setIsRoomAvailable] = useState(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      try {
-        const decodedToken = jwtDecode(token);
-        const userId = decodedToken.nameid;
-        if (!userId) {
-          throw new Error("Không tìm thấy nameid trong token");
-        }
-        fetchUserInfo(userId);
-      } catch (error) {
-        console.error("Error decoding token in BookingPage:", error.message);
-        setError("Không thể giải mã token. Vui lòng đăng nhập lại.");
-      }
-    } else {
+    if (!accessToken) {
       setError("Không tìm thấy token. Vui lòng đăng nhập.");
+      navigate("/login");
+      return;
     }
-  }, []);
+    try {
+      const decodedToken = jwtDecode(accessToken);
+      const userId = decodedToken.nameid;
+      if (!userId) {
+        throw new Error("Không tìm thấy nameid trong token");
+      }
+      fetchUserInfo(userId);
+    } catch (error) {
+      console.error("Lỗi giải mã token trong BookingPage:", error.message);
+      setError("Không thể giải mã token. Vui lòng đăng nhập lại.");
+      navigate("/login");
+    }
+  }, [accessToken, navigate]); // Thêm accessToken vào dependencies
 
   useEffect(() => {
     const fetchRoomData = async () => {
       setLoading(true);
       try {
-        const response = await axios.get(`http://localhost:5053/api/rooms/${roomId}`);
+        const response = await axios.get(`http://localhost:5053/api/rooms/${roomId}`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`, // Sử dụng accessToken
+          },
+        });
         const data = response.data.data;
         if (data) {
           setRoomData({
             RoomId: data.roomId,
             RoomType: data.roomType || "Unknown Room Type",
             Price: data.price || 129.0,
-            ImageUrl: data.thumbnailUrl 
-              ? `http://localhost:5053${data.thumbnailUrl.replace(/\\/g, "/")}` 
-              : "/images/placeholder-room.jpg"
+            ImageUrl: data.thumbnailUrl
+              ? `http://localhost:5053${data.thumbnailUrl.replace(/\\/g, "/")}`
+              : "/images/placeholder-room.jpg",
           });
         } else {
-          throw new Error("Room data not found");
+          throw new Error("Không tìm thấy dữ liệu phòng");
         }
       } catch (error) {
-        console.error("Error fetching room data:", error);
+        console.error("Lỗi khi lấy dữ liệu phòng:", error);
         setError("Không thể tải thông tin phòng. Vui lòng thử lại.");
       } finally {
         setLoading(false);
       }
     };
-    
+
     fetchRoomData();
-  }, [roomId]);
+  }, [roomId, accessToken]); // Thêm accessToken vào dependencies
 
   const fetchUserInfo = async (userId) => {
     try {
       const response = await axios.get(`http://localhost:5053/api/user/id/${userId}`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${accessToken}`, // Sử dụng accessToken
         },
       });
       if (response.data.code === 200 && response.data.data) {
@@ -92,20 +100,61 @@ function BookingPage() {
         throw new Error(response.data.message || "Dữ liệu người dùng không hợp lệ");
       }
     } catch (error) {
-      console.error("Failed to fetch user info:", error.message);
+      console.error("Lỗi khi lấy thông tin người dùng:", error.message);
       setError(`Không thể tải thông tin người dùng: ${error.message}`);
     }
   };
 
-  const handleChange = (e) => {
+  const handleChange = async (e) => {
     const { name, value } = e.target;
+    let updatedFormData = { ...formData };
+
     if (name === "Phone") {
       const numericValue = value.replace(/\D/g, "");
       if (numericValue.length <= 10) {
-        setFormData({ ...formData, [name]: numericValue });
+        updatedFormData = { ...formData, [name]: numericValue };
       }
     } else {
-      setFormData({ ...formData, [name]: value });
+      updatedFormData = { ...formData, [name]: value };
+    }
+
+    setFormData(updatedFormData);
+
+    if (
+      (name === "CheckInDate" || name === "CheckOutDate") &&
+      updatedFormData.CheckInDate &&
+      updatedFormData.CheckOutDate
+    ) {
+      await checkRoomAvailability(updatedFormData.CheckInDate, updatedFormData.CheckOutDate);
+    }
+  };
+
+  const checkRoomAvailability = async (checkInDate, checkOutDate) => {
+    try {
+      setLoading(true);
+      const response = await axios.get(
+        `http://localhost:5053/api/rooms/isavailable/${roomId}?checkInDate=${checkInDate}&checkOutDate=${checkOutDate}`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`, // Sử dụng accessToken
+          },
+        }
+      );
+
+      if (response.data.code === 200) {
+        setIsRoomAvailable(response.data.data);
+        if (!response.data.data) {
+          alert("Phòng không có sẵn trong khoảng thời gian đã chọn!");
+        }
+      } else {
+        throw new Error(response.data.message || "Không thể kiểm tra trạng thái phòng");
+      }
+    } catch (error) {
+      console.error("Lỗi khi kiểm tra tính khả dụng của phòng:", error);
+      setError("Không thể kiểm tra trạng thái phòng. Vui lòng thử lại.");
+      setIsRoomAvailable(false);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -115,39 +164,53 @@ function BookingPage() {
     return Math.max((endDate - startDate) / (1000 * 60 * 60 * 24), 1);
   };
 
-  const nights = formData.CheckInDate && formData.CheckOutDate 
-    ? calculateNights(formData.CheckInDate, formData.CheckOutDate) 
-    : 0;
+  const nights =
+    formData.CheckInDate && formData.CheckOutDate
+      ? calculateNights(formData.CheckInDate, formData.CheckOutDate)
+      : 0;
   const totalAmount = roomData ? roomData.Price * nights : 0;
 
   const checkPaymentStatus = async (bookingId) => {
     try {
       const response = await axios.get(`http://localhost:5053/api/payment/booking/${bookingId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        headers: { Authorization: `Bearer ${accessToken}` }, // Sử dụng accessToken
       });
-      console.log("Payment status response:", JSON.stringify(response.data, null, 2));
+      console.log("Phản hồi trạng thái thanh toán:", JSON.stringify(response.data, null, 2));
       if (response.data.code === 200 && response.data.data.length > 0) {
         const payment = response.data.data[0];
-        // Kiểm tra paymentStatus thay vì isSuccess
         const isSuccess = payment.paymentStatus === "Success";
-        console.log(`Payment status: ${payment.paymentStatus}, isSuccess: ${isSuccess}`);
+        console.log(`Trạng thái thanh toán: ${payment.paymentStatus}, isSuccess: ${isSuccess}`);
         return isSuccess;
       }
-      console.log("No payment data found or code !== 200");
+      console.log("Không tìm thấy dữ liệu thanh toán hoặc code !== 200");
       return false;
     } catch (error) {
-      console.error("Error checking payment status:", error.response ? error.response.data : error.message);
+      console.error("Lỗi khi kiểm tra trạng thái thanh toán:", error.response ? error.response.data : error.message);
       return false;
     }
   };
 
   const handlePayment = async () => {
-    if (!formData.FullName || !formData.Phone || !formData.Email || !formData.CheckInDate || !formData.CheckOutDate) {
+    if (
+      !formData.FullName ||
+      !formData.Phone ||
+      !formData.Email ||
+      !formData.CheckInDate ||
+      !formData.CheckOutDate
+    ) {
       alert("Vui lòng nhập đầy đủ thông tin khách hàng và ngày nhận/trả phòng!");
       return;
     }
     if (formData.Phone.length !== 10) {
       alert("Vui lòng nhập số điện thoại hợp lệ!");
+      return;
+    }
+    if (isRoomAvailable === false) {
+      alert("Phòng không có sẵn trong khoảng thời gian đã chọn. Vui lòng chọn ngày khác!");
+      return;
+    }
+    if (isRoomAvailable === null) {
+      alert("Vui lòng chờ kiểm tra tính khả dụng của phòng trước khi thanh toán!");
       return;
     }
 
@@ -156,10 +219,10 @@ function BookingPage() {
       roomId: parseInt(roomId),
       checkInDate: formData.CheckInDate + ":00",
       checkOutDate: formData.CheckOutDate + ":00",
-      PhoneNumber: formData.Phone
+      PhoneNumber: formData.Phone,
     };
 
-    console.log("Booking Request JSON:", JSON.stringify(bookingRequest, null, 2));
+    console.log("Yêu cầu đặt phòng JSON:", JSON.stringify(bookingRequest, null, 2));
 
     setLoading(true);
 
@@ -167,11 +230,11 @@ function BookingPage() {
       const bookingResponse = await axios.post("http://localhost:5053/api/bookings", bookingRequest, {
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${accessToken}`, // Sử dụng accessToken
         },
       });
 
-      console.log("Booking Response JSON:", JSON.stringify(bookingResponse.data, null, 2));
+      console.log("Phản hồi đặt phòng JSON:", JSON.stringify(bookingResponse.data, null, 2));
 
       if (bookingResponse.data.code === 200) {
         const bookingId = bookingResponse.data.data.bookingId;
@@ -179,40 +242,42 @@ function BookingPage() {
 
         const paymentRequest = {
           amount: totalAmount,
-          orderId: bookingId.toString()
+          orderId: bookingId.toString(),
         };
 
-        console.log("Payment Request JSON:", JSON.stringify(paymentRequest, null, 2));
+        console.log("Yêu cầu thanh toán JSON:", JSON.stringify(paymentRequest, null, 2));
 
-        const paymentResponse = await axios.post("http://localhost:5053/api/vnpay/create-payment", paymentRequest, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
+        const paymentResponse = await axios.post(
+          "http://localhost:5053/api/vnpay/create-payment",
+          paymentRequest,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`, // Sử dụng accessToken
+            },
+          }
+        );
 
-        console.log("Payment Response JSON:", JSON.stringify(paymentResponse.data, null, 2));
+        console.log("Phản hồi thanh toán JSON:", JSON.stringify(paymentResponse.data, null, 2));
 
         if (paymentResponse.data.code === 200) {
           const paymentUrl = paymentResponse.data.data;
           window.open(paymentUrl, "_blank");
 
-          // Polling trạng thái thanh toán
           const interval = setInterval(async () => {
             const paid = await checkPaymentStatus(bookingId);
             setIsPaid(paid);
-            console.log(`Polling payment status for booking ${bookingId}: ${paid}`);
+            console.log(`Kiểm tra trạng thái thanh toán cho đặt phòng ${bookingId}: ${paid}`);
             if (paid) {
               clearInterval(interval);
               navigate(`/payment-result?paymentStatus=Payment%20successfully&orderId=${bookingId}`);
             }
           }, 2000);
 
-          // Dừng polling sau 5 phút
           setTimeout(() => {
             clearInterval(interval);
             if (!isPaid) {
-              console.log("Polling timeout - payment not completed");
+              console.log("Hết thời gian polling - thanh toán chưa hoàn tất");
               alert("Hết thời gian chờ thanh toán! Vui lòng kiểm tra lại trạng thái.");
             }
           }, 300000);
@@ -223,7 +288,7 @@ function BookingPage() {
         alert("Đặt phòng thất bại: " + bookingResponse.data.message);
       }
     } catch (error) {
-      console.error("Error during booking or payment creation:", error);
+      console.error("Lỗi trong quá trình đặt phòng hoặc tạo thanh toán:", error);
       alert("Đã xảy ra lỗi khi xử lý đặt phòng hoặc thanh toán. Vui lòng thử lại!");
     } finally {
       setLoading(false);
@@ -235,7 +300,7 @@ function BookingPage() {
   }
 
   if (!roomData) {
-    return <div>Loading room data...</div>;
+    return <div>Đang tải dữ liệu phòng...</div>;
   }
 
   return (

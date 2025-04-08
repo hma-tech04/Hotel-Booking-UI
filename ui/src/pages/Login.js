@@ -13,57 +13,73 @@ function Login({ updateAdminStatus }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:5053/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await response.json();
-      if (response.ok && data.code === 200 && data.data?.accessToken) {
-        localStorage.setItem('token', data.data.accessToken);
-        updateAdminStatus(data.data.accessToken);
-        console.log('Login successful, navigating to /');
-        navigate('/', { replace: true });
-      } else {
-        alert(`Lỗi: ${data.message || 'Đăng nhập thất bại, vui lòng kiểm tra lại email hoặc mật khẩu.'}`);
-      }
-    } catch (error) {
-      console.error('Error during login:', error);
-      alert('Đã xảy ra lỗi khi kết nối đến server. Vui lòng thử lại sau.');
-    }
-  };
+      // Đảm bảo payload khớp với định dạng backend mong đợi (Email và Password)
+      const payload = { Email: email, Password: password };
+      console.log('Payload gửi đi:', payload); // Logging để kiểm tra dữ liệu gửi đi
 
-  const handleGoogleSuccess = async (response) => {
-    console.log('Google login success:', response);
-    const googleToken = response.credential;
-    const payload = { IdToken: googleToken };
-    console.log('Payload sent to server:', googleToken);
-    try {
-      const apiResponse = await fetch('http://localhost:5053/api/auth/login-google', {
+      const response = await fetch('https://localhost:7044/api/auth/login', {
+        credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
+
+      console.log('Mã trạng thái phản hồi:', response.status); // Logging mã trạng thái
+
+      const data = await response.json();
+      console.log('Dữ liệu phản hồi:', data); // Logging dữ liệu phản hồi từ backend
+
+      if (response.ok && data.code === 200 && data.data?.accessToken) {
+        localStorage.setItem('token', data.data.accessToken);
+        updateAdminStatus(data.data.accessToken);
+        console.log('Đăng nhập thành công, chuyển hướng đến /');
+        navigate('/', { replace: true });
+      } else {
+        // Hiển thị thông báo lỗi chi tiết hơn
+        const errorMessage = data.message || 'Đăng nhập thất bại, vui lòng kiểm tra lại email hoặc mật khẩu.';
+        alert(`Lỗi: ${errorMessage}`);
+      }
+    } catch (error) {
+      console.error('Lỗi trong quá trình đăng nhập:', error);
+      alert('Đã xảy ra lỗi khi kết nối đến server. Vui lòng kiểm tra kết nối và thử lại sau.');
+    }
+  };
+
+  const handleGoogleSuccess = async (response) => {
+    console.log('Đăng nhập Google thành công:', response);  
+    const googleToken = response.credential;
+    const payload = { IdToken: googleToken };
+    console.log('Payload gửi đến server:', payload);
+
+    try {
+      const apiResponse = await fetch('https://localhost:7044/api/auth/login-google', {
+        credentials: 'include',
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      console.log('Mã trạng thái phản hồi từ server:', apiResponse.status);
       const apiData = await apiResponse.json();
-      console.log('Server response status:', apiResponse.status);
-      console.log('Server response data:', apiData);
+      console.log('Dữ liệu phản hồi từ server:', apiData);
+
       if (apiResponse.ok && apiData.code === 200 && apiData.data?.accessToken) {
         localStorage.setItem('token', apiData.data.accessToken);
         updateAdminStatus(apiData.data.accessToken);
-        console.log('Google login successful, navigating to /');
+        console.log('Đăng nhập Google thành công, chuyển hướng đến /');
         navigate('/', { replace: true });
       } else {
-        console.log('Login failed with response:', apiData);
-        alert(`Lỗi: ${apiData.message || 'Đăng nhập Google thất bại. Vui lòng thử lại.'}`);
+        const errorMessage = apiData.message || 'Đăng nhập Google thất bại. Vui lòng thử lại.';
+        alert(`Lỗi: ${errorMessage}`);
       }
     } catch (error) {
-      console.error('Error during Google login:', error);
+      console.error('Lỗi trong quá trình đăng nhập Google:', error);
       alert('Đã xảy ra lỗi khi kết nối đến server. Vui lòng thử lại sau.');
     }
   };
 
   const handleGoogleFailure = (error) => {
-    console.error('Google login failed:', error);
+    console.error('Đăng nhập Google thất bại:', error);
     alert(`Lỗi đăng nhập Google: ${error.error || 'Không xác định'}`);
   };
 

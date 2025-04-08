@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
+import { useAuthToken } from "../Utils/useAuthToken"; // Import useAuthToken với đường dẫn đúng
 import "../styles/booking.css";
+import Footer from "../components/Footer";
 
 function BookingManagement() {
+  const { accessToken } = useAuthToken();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -12,21 +15,20 @@ function BookingManagement() {
   useEffect(() => {
     const fetchBookings = async () => {
       try {
-        const token = localStorage.getItem("token");
-        if (!token) {
+        if (!accessToken) {
           navigate("/login");
           return;
         }
 
-        const decodedToken = jwtDecode(token);
-        const userId = decodedToken.nameid; // Lấy userId từ token
+        const decodedToken = jwtDecode(accessToken);
+        const userId = decodedToken.nameid;
         if (!userId) {
           throw new Error("User ID not found in token");
         }
 
         const response = await fetch(`http://localhost:5053/api/bookings/user/${userId}`, {
           headers: {
-            "Authorization": `Bearer ${token}`,
+            "Authorization": `Bearer ${accessToken}`, // Sử dụng accessToken
             "Content-Type": "application/json",
           },
         });
@@ -40,18 +42,18 @@ function BookingManagement() {
           BookingId: booking.bookingId,
           UserId: booking.userId,
           TotalPrice: booking.totalPrice,
-          BookingStatus: booking.bookingStatus, // Thêm BookingStatus
+          BookingStatus: booking.bookingStatus,
           rooms: [
             {
-              RoomType: `Room ${booking.roomId}`, // Có thể thay bằng API trả về RoomType thực tế nếu có
+              RoomType: `Room ${booking.roomId}`,
               CheckInDate: booking.checkInDate,
               CheckOutDate: booking.checkOutDate,
-              Price: booking.totalPrice, // Giả sử giá phòng bằng tổng giá
+              Price: booking.totalPrice,
               actualCheckInTime: booking.actualCheckInTime || null,
               actualCheckOutTime: booking.actualCheckOutTime || null,
             },
           ],
-          Status: booking.bookingStatus, // Giữ đồng bộ với API
+          Status: booking.bookingStatus,
         }));
 
         setBookings(transformedBookings);
@@ -63,7 +65,7 @@ function BookingManagement() {
     };
 
     fetchBookings();
-  }, [navigate]);
+  }, [accessToken, navigate]); // Thêm accessToken vào dependencies
 
   const calculateNights = (checkInDate, checkOutDate) => {
     const start = new Date(checkInDate);
@@ -121,7 +123,7 @@ function BookingManagement() {
                           BookingId: booking.BookingId,
                           UserId: booking.UserId,
                           TotalPrice: booking.TotalPrice,
-                          BookingStatus: booking.Status, // Truyền trạng thái
+                          BookingStatus: booking.Status,
                           rooms: [
                             {
                               RoomType: room.RoomType,

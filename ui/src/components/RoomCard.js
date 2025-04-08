@@ -26,7 +26,7 @@ function RoomCard({ room }) {
       <div className="text">
         <h3>{roomType}</h3>
         <p>
-          <span>${price}</span> mỗi đêm
+          <h4>{price} VNĐ / Đêm.</h4>
         </p>
         <p>Trạng thái: {isAvailable ? "Còn trống" : "Đã đặt"}</p>
         <div className="button-group">

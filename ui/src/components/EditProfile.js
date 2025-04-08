@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import '../styles/EditProfile.css';
 import backgroundImage from '../images/home1.jpg';
+import { useAuthToken } from '../Utils/useAuthToken'; // Import useAuthToken
 
 function EditProfile() {
   const navigate = useNavigate();
+  const { accessToken } = useAuthToken(); // Lấy accessToken từ useAuthToken
   const [userInfo, setUserInfo] = useState({
     FullName: '',
     Email: '',
@@ -16,31 +18,30 @@ function EditProfile() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
+    if (!accessToken) {
       setError('Không tìm thấy token, vui lòng đăng nhập lại');
       navigate('/login');
       return;
     }
     try {
-      const decoded = jwtDecode(token);
-      console.log('Decoded token:', decoded); // In token để kiểm tra
-      const userId = decoded.nameid; // Sửa thành nameid (chữ thường)
+      const decoded = jwtDecode(accessToken);
+      console.log('Decoded token:', decoded);
+      const userId = decoded.nameid;
       if (!userId) {
         throw new Error('Không tìm thấy nameid trong token');
       }
-      fetchUserInfo(userId); // Gọi API để lấy thông tin người dùng
+      fetchUserInfo(userId);
     } catch (err) {
       setError(err.message || 'Token không hợp lệ, vui lòng đăng nhập lại');
       navigate('/login');
     }
-  }, [navigate]);
+  }, [navigate, accessToken]); // Thêm accessToken vào dependencies
 
   const fetchUserInfo = async (userId) => {
     try {
       const response = await fetch(`http://localhost:5053/api/user/id/${userId}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${accessToken}`, // Sử dụng accessToken
         },
       });
       if (!response.ok) {
@@ -96,9 +97,8 @@ function EditProfile() {
     setLoading(true);
     setError('');
     try {
-      const token = localStorage.getItem('token');
-      const decoded = jwtDecode(token);
-      const userId = decoded.nameid; // Sửa thành nameid (chữ thường)
+      const decoded = jwtDecode(accessToken);
+      const userId = decoded.nameid;
       const currentTime = Math.floor(Date.now() / 1000);
       if (decoded.exp < currentTime) {
         throw new Error('Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại');
@@ -107,10 +107,10 @@ function EditProfile() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${accessToken}`, // Sử dụng accessToken
         },
         body: JSON.stringify({
-          UserId: userId, // Gửi userId từ nameid
+          UserId: userId,
           FullName: userInfo.FullName,
           Email: userInfo.Email,
           PhoneNumber: userInfo.PhoneNumber || null,

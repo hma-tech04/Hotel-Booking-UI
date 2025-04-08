@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useAuthToken } from '../../Utils/useAuthToken';
 import {
   Button as MuiButton,
   Dialog,
@@ -19,6 +20,7 @@ import { jwtDecode } from 'jwt-decode';
 import { textFieldStyle } from '../../styles/RoomList.css'; // Giả sử file này tồn tại
 
 const BookingList = () => {
+  const { accessToken } = useAuthToken(); // Lấy accessToken từ useAuthToken
   const [openDialog, setOpenDialog] = useState(false);
   const [paymentDialog, setPaymentDialog] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
@@ -32,17 +34,19 @@ const BookingList = () => {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
+    if (!accessToken) {
+      setError('Không tìm thấy token xác thực. Vui lòng đăng nhập.');
+      return;
+    }
+
     const fetchBookingsAndPaymentStatuses = async () => {
       try {
-        const token = localStorage.getItem('token');
-        if (!token) throw new Error('Không tìm thấy token xác thực. Vui lòng đăng nhập.');
-
-        const decoded = jwtDecode(token);
+        const decoded = jwtDecode(accessToken);
         console.log('User role:', decoded.role);
         setIsAdmin(decoded.role === 'Admin');
 
         const response = await axios.get('http://localhost:5053/api/bookings', {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${accessToken}` },
         });
 
         const bookingData = response.data.data;
@@ -83,8 +87,9 @@ const BookingList = () => {
         console.error('Lỗi khi tải bookings:', err.response || err);
       }
     };
+
     fetchBookingsAndPaymentStatuses();
-  }, []);
+  }, [accessToken]);
 
   const handleCancelBooking = async (bookingId) => {
     if (!bookingId) {
@@ -92,17 +97,19 @@ const BookingList = () => {
       return;
     }
 
+    if (!accessToken) {
+      setError('Không tìm thấy token xác thực. Vui lòng đăng nhập.');
+      return;
+    }
+
     if (window.confirm('Bạn có chắc chắn muốn hủy đặt phòng này không?')) {
       try {
-        const token = localStorage.getItem('token');
-        if (!token) throw new Error('Không tìm thấy token xác thực.');
-
         console.log(`Canceling booking ID: ${bookingId}`);
         const response = await axios.put(
           `http://localhost:5053/api/bookings/${bookingId}/cancel`,
           null,
           {
-            headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+            headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
           }
         );
 
@@ -133,13 +140,15 @@ const BookingList = () => {
 
   const handleViewPayment = async (booking) => {
     setSelectedBooking(booking);
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) throw new Error('Không tìm thấy token xác thực.');
+    if (!accessToken) {
+      setError('Không tìm thấy token xác thực. Vui lòng đăng nhập.');
+      return;
+    }
 
+    try {
       console.log(`Fetching payment for booking ID: ${booking.bookingId}`);
       const response = await axios.get(`http://localhost:5053/api/payment/booking/${booking.bookingId}`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${accessToken}` },
       });
 
       const paymentData = response.data.data;
@@ -168,14 +177,16 @@ const BookingList = () => {
   };
 
   const handleSearch = async () => {
+    if (!accessToken) {
+      setError('Không tìm thấy token xác thực. Vui lòng đăng nhập.');
+      return;
+    }
+
     try {
       if (!/^\d{10}$/.test(phoneNumber)) {
         setError('Số điện thoại phải đúng 10 chữ số.');
         return;
       }
-
-      const token = localStorage.getItem('token');
-      if (!token) throw new Error('Không tìm thấy token xác thực.');
 
       const endpoint =
         action === 'checkout'
@@ -187,7 +198,7 @@ const BookingList = () => {
         endpoint,
         { PhoneNumber: phoneNumber },
         {
-          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+          headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
         }
       );
 
@@ -223,13 +234,15 @@ const BookingList = () => {
   };
 
   const checkPaymentStatus = async (bookingId) => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) throw new Error('Không tìm thấy token xác thực.');
+    if (!accessToken) {
+      console.error('Không tìm thấy token xác thực.');
+      return false;
+    }
 
+    try {
       console.log(`Checking payment status for booking ID: ${bookingId}`);
       const response = await axios.get(`http://localhost:5053/api/payment/booking/${bookingId}`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${accessToken}` },
       });
 
       console.log('Full payment status response:', response.data);
@@ -257,10 +270,13 @@ const BookingList = () => {
   };
 
   const handleConfirmAction = async (booking) => {
+    if (!accessToken) {
+      setError('Không tìm thấy token xác thực. Vui lòng đăng nhập.');
+      return;
+    }
+
     try {
       console.log('Starting handleConfirmAction for booking:', booking);
-      const token = localStorage.getItem('token');
-      if (!token) throw new Error('Không tìm thấy token xác thực.');
 
       if (action === 'checkin' || action === 'checkout') {
         const isCompleted = await checkPaymentStatus(booking.bookingId);
@@ -301,7 +317,7 @@ const BookingList = () => {
 
       console.log(`Calling ${endpoint} for booking ID: ${booking.bookingId}`);
       const response = await axios.post(endpoint, null, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${accessToken}` },
       });
 
       console.log('API response:', response.data);
@@ -329,7 +345,7 @@ const BookingList = () => {
 
         console.log('Refreshing bookings from backend...');
         const refreshResponse = await axios.get('http://localhost:5053/api/bookings', {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${accessToken}` },
         });
         console.log('Refreshed bookings:', refreshResponse.data.data);
         setBookings(refreshResponse.data.data);
@@ -423,10 +439,16 @@ const BookingList = () => {
           color="primary"
           onClick={() => handleOpenDialog('checkin')}
           style={{ marginRight: '10px' }}
+          disabled={!accessToken}
         >
           Check-in
         </MuiButton>
-        <MuiButton variant="contained" color="secondary" onClick={() => handleOpenDialog('checkout')}>
+        <MuiButton
+          variant="contained"
+          color="secondary"
+          onClick={() => handleOpenDialog('checkout')}
+          disabled={!accessToken}
+        >
           Check-out
         </MuiButton>
       </div>
@@ -460,7 +482,7 @@ const BookingList = () => {
                   color="error"
                   size="small"
                   onClick={() => handleCancelBooking(booking.bookingId)}
-                  disabled={booking.bookingStatus === 'Cancelled'}
+                  disabled={!accessToken || booking.bookingStatus === 'Cancelled'}
                   style={{ marginRight: '5px' }}
                 >
                   Hủy
@@ -470,6 +492,7 @@ const BookingList = () => {
                   color="primary"
                   size="small"
                   onClick={() => handleViewPayment(booking)}
+                  disabled={!accessToken}
                 >
                   Xem TT
                 </MuiButton>
@@ -521,7 +544,7 @@ const BookingList = () => {
                         variant="contained"
                         sx={confirmButtonStyle}
                         onClick={() => handleConfirmAction(booking)}
-                        disabled={!isAdmin}
+                        disabled={!isAdmin || !accessToken}
                       >
                         {action === 'checkin' ? 'Xác nhận Check-in' : 'Xác nhận Check-out'}
                       </MuiButton>
@@ -553,6 +576,7 @@ const BookingList = () => {
               fontWeight: 'bold',
               '&:hover': { backgroundColor: '#2e7d32' },
             }}
+            disabled={!accessToken}
           >
             Tìm kiếm
           </MuiButton>

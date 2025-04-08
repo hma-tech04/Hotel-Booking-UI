@@ -11,17 +11,32 @@ function RoomCardDisplay() {
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [checkInDate, setCheckInDate] = useState("");
+  const [checkOutDate, setCheckOutDate] = useState("");
   const roomsPerPage = 6;
 
   useEffect(() => {
     const fetchRooms = async () => {
       setLoading(true);
+      setError(null); // Reset error trước khi gọi API
       try {
-        const response = await axios.get(
-          `http://localhost:5053/api/rooms?pageNumber=${currentPage}&pageSize=${roomsPerPage}`
-        );
+        // Kiểm tra logic ngày check-in và check-out
+        if (checkInDate && checkOutDate) {
+          const checkIn = new Date(checkInDate);
+          const checkOut = new Date(checkOutDate);
+          if (checkOut <= checkIn) {
+            throw new Error("Ngày check-out phải sau ngày check-in.");
+          }
+        }
 
+        let url = `http://localhost:5053/api/rooms?pageNumber=${currentPage}&pageSize=${roomsPerPage}`;
+        if (checkInDate && checkOutDate) {
+          url = `http://localhost:5053/api/rooms/available/all?checkInDate=${checkInDate}&checkOutDate=${checkOutDate}&pageNumber=${currentPage}&pageSize=${roomsPerPage}`;
+        }
+
+        const response = await axios.get(url);
         const responseData = response.data.data;
+
         if (responseData && Array.isArray(responseData.data)) {
           setRooms(responseData.data);
           setFilteredRooms(responseData.data);
@@ -30,7 +45,7 @@ function RoomCardDisplay() {
           throw new Error("Định dạng dữ liệu từ API không hợp lệ");
         }
       } catch (err) {
-        setError("Không thể tải danh sách phòng. Vui lòng kiểm tra API hoặc console để biết chi tiết.");
+        setError(err.message || "Không thể tải danh sách phòng. Vui lòng kiểm tra API hoặc console để biết chi tiết.");
         console.error("Error fetching rooms:", err.response || err);
       } finally {
         setLoading(false);
@@ -38,7 +53,7 @@ function RoomCardDisplay() {
     };
 
     fetchRooms();
-  }, [currentPage]);
+  }, [currentPage, checkInDate, checkOutDate]);
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
@@ -99,6 +114,30 @@ function RoomCardDisplay() {
     <div className="container">
       <section className="room top" id="room">
         <div className="search-bar">
+          <div className="date-picker-container" style={{ marginBottom: "20px" }}>
+            <div style={{ marginRight: "20px", display: "inline-block" }}>
+              <label htmlFor="checkInDate">Check-in: </label>
+              <input
+                type="date"
+                id="checkInDate"
+                value={checkInDate}
+                onChange={(e) => setCheckInDate(e.target.value)}
+                min={new Date().toISOString().split("T")[0]}
+                style={{ padding: "8px", marginLeft: "10px" }}
+              />
+            </div>
+            <div style={{ display: "inline-block" }}>
+              <label htmlFor="checkOutDate">Check-out: </label>
+              <input
+                type="date"
+                id="checkOutDate"
+                value={checkOutDate}
+                onChange={(e) => setCheckOutDate(e.target.value)}
+                min={checkInDate || new Date().toISOString().split("T")[0]}
+                style={{ padding: "8px", marginLeft: "10px" }}
+              />
+            </div>
+          </div>
           <div className="search-container">
             <input
               type="text"

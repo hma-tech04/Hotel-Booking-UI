@@ -14,8 +14,10 @@ import {
   TableRow,
 } from '@mui/material';
 import { textFieldStyle } from '../../styles/RoomList.css'; // Import style từ RoomList.css
+import { useAuthToken } from '../../Utils/useAuthToken'; // Import useAuthToken
 
 const UserList = () => {
+  const { accessToken } = useAuthToken(); // Lấy accessToken từ useAuthToken
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [userRole, setUserRole] = useState('');
@@ -32,16 +34,15 @@ const UserList = () => {
         setLoading(true);
         setError(null);
 
-        const token = localStorage.getItem('token');
-        if (!token) {
-          throw new Error('No authentication token found');
+        if (!accessToken) {
+          throw new Error('No authentication token found. Please log in.');
         }
 
         const response = await fetch('http://localhost:5053/api/admin/users', {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${accessToken}`,
           },
         });
 
@@ -57,7 +58,7 @@ const UserList = () => {
             email: user.email || '',
             role: user.role,
             phoneNumber: user.phoneNumber,
-            createdDate: user.createdDate
+            createdDate: user.createdDate,
           }));
           setUsers(formattedUsers);
           console.log('Fetched users:', formattedUsers);
@@ -73,7 +74,7 @@ const UserList = () => {
     };
 
     fetchUsers();
-  }, []);
+  }, [accessToken]);
 
   const handleOpenDialog = (user) => {
     setSelectedUser(user);
@@ -89,18 +90,17 @@ const UserList = () => {
 
   const handleSave = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('No authentication token found');
+      if (!accessToken) {
+        throw new Error('No authentication token found. Please log in.');
       }
 
       const response = await fetch(`http://localhost:5053/api/admin/users/${selectedUser.id}/role`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({ role: userRole })
+        body: JSON.stringify({ role: userRole }),
       });
 
       if (!response.ok) {
@@ -135,9 +135,8 @@ const UserList = () => {
 
   const handleDelete = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('No authentication token found. Please login again.');
+      if (!accessToken) {
+        throw new Error('No authentication token found. Please log in.');
       }
 
       setLoading(true);
@@ -147,7 +146,7 @@ const UserList = () => {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${accessToken}`,
         },
       });
 
@@ -169,7 +168,7 @@ const UserList = () => {
       console.error('Delete error details:', {
         message: err.message,
         userId: userToDelete,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
       setError(err.message);
     } finally {
@@ -183,24 +182,22 @@ const UserList = () => {
       (user.email || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Tùy chỉnh textFieldStyle để có màu viền blue khi focus
   const customTextFieldStyle = {
     ...textFieldStyle,
     '& .MuiOutlinedInput-root': {
       ...textFieldStyle['& .MuiOutlinedInput-root'],
       '&.Mui-focused fieldset': {
-        borderColor: 'blue', // Màu viền khi focus
+        borderColor: 'blue',
       },
     },
   };
 
-  // Tùy chỉnh textFieldStyle để có màu viền pink khi focus (cho dialog)
   const customDialogTextFieldStyle = {
     ...textFieldStyle,
     '& .MuiOutlinedInput-root': {
       ...textFieldStyle['& .MuiOutlinedInput-root'],
       '&.Mui-focused fieldset': {
-        borderColor: 'pink', // Màu viền khi focus
+        borderColor: 'pink',
       },
     },
   };
@@ -213,7 +210,7 @@ const UserList = () => {
         onChange={(e) => setSearchQuery(e.target.value)}
         fullWidth
         style={{ marginBottom: '20px' }}
-        sx={customTextFieldStyle} // Sử dụng style tùy chỉnh với viền blue
+        sx={customTextFieldStyle}
       />
       {loading ? (
         <div>Đang tải dữ liệu...</div>
@@ -263,11 +260,11 @@ const UserList = () => {
         <DialogTitle>Chỉnh sửa Vai trò Người dùng</DialogTitle>
         <DialogContent>
           <MuiTextField
-            label="Vai trò"
+            label="quires"
             value={userRole}
             onChange={(e) => setUserRole(e.target.value)}
             fullWidth
-            sx={customDialogTextFieldStyle} // Sử dụng style tùy chỉnh với viền pink
+            sx={customDialogTextFieldStyle}
           />
         </DialogContent>
         <DialogActions>

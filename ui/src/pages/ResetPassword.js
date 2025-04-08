@@ -2,17 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/style.css';
 import '../styles/resetpassword.css';
+import { useAuthToken } from '../Utils/useAuthToken'; // Import useAuthToken với đường dẫn đúng
 
 const API_URL = 'http://localhost:5053';
 
 function ResetPassword() {
+  const { accessToken, setAccessToken } = useAuthToken(); // Sử dụng useAuthToken
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [timer, setTimer] = useState(300);
-  const navigate = useNavigate();
+  const negotiate = useNavigate();
 
   useEffect(() => {
     let countdown;
@@ -80,13 +82,13 @@ function ResetPassword() {
       return;
     }
     try {
-      const token = localStorage.getItem('resetToken');
-      console.log('Resetting password with token:', token);
+      const resetToken = localStorage.getItem('resetToken');
+      console.log('Resetting password with token:', resetToken);
       const response = await fetch(`${API_URL}/api/auth/reset-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${resetToken}`, // Sử dụng resetToken thay vì accessToken
         },
         body: JSON.stringify({ NewPassword: newPassword }),
       });
@@ -95,7 +97,7 @@ function ResetPassword() {
       if (result.code === 200) {
         alert('Mật khẩu đã được cập nhật!');
         localStorage.removeItem('resetToken');
-        navigate('/login');
+        negotiate('/login');
       } else {
         throw new Error(result.message || 'Cập nhật mật khẩu thất bại');
       }

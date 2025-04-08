@@ -113,30 +113,30 @@ function RoomDetail() {
             {/* Phần thông tin phòng */}
             <div className="room-info">
               <h2>{room.roomType}</h2>
-              <p className="price">Price: ${room.price} per night</p>
+              <p className="price">Giá: {room.price} VNĐ/ Đêm</p>
               <p className="description">{room.description}</p>
               <p className="availability">Status: {room.isAvailable ? "Available" : "Not Available"}</p>
 
               {/* Thông tin chi tiết */}
               <div className="room-details-grid">
                 <div className="room-detail-row">
-                  <span className="detail-label">Area</span>
+                  <span className="detail-label">Diện tích</span>
                   <span className="detail-value">{room.area} sq ft</span>
                 </div>
                 <div className="room-detail-row">
-                  <span className="detail-label">Bed Type</span>
+                  <span className="detail-label">Kiểu Giường</span>
                   <span className="detail-value">{room.bedType}</span>
                 </div>
                 <div className="room-detail-row">
-                  <span className="detail-label">Max Occupancy</span>
-                  <span className="detail-value">{room.maxOccupancy} people</span>
+                  <span className="detail-label">Số người tối đa</span>
+                  <span className="detail-value">{room.maxOccupancy} Người</span>
                 </div>
                 <div className="room-detail-row">
-                  <span className="detail-label">Amenities</span>
+                  <span className="detail-label">Tiện nghi</span>
                   <span className="detail-value">{room.amenities.join(", ")}</span>
                 </div>
                 <div className="room-detail-row">
-                  <span className="detail-label">Cancellation Policy</span>
+                  <span className="detail-label">Chính sách hủy phòng</span>
                   <span className="detail-value">{room.cancellationPolicy}</span>
                 </div>
               </div>
@@ -144,7 +144,7 @@ function RoomDetail() {
               {/* Nút hành động */}
               <div className="room-actions">
                 <Link to={`/booking-page/${room.roomId}`}>
-                  <button className="book-now-btn">Book Now</button>
+                  <button className="book-now-btn">Đặt ngay</button>
                 </Link>
               </div>
             </div>

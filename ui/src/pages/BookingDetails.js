@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import "../styles/booking-detail.css";
+import { useAuthToken } from "../Utils/useAuthToken"; // Import useAuthToken với đường dẫn đúng
 
 function BookingDetails() {
   const { bookingId } = useParams();
   const navigate = useNavigate();
-  const location = useLocation(); // Lấy dữ liệu từ state
+  const location = useLocation();
+  const { accessToken } = useAuthToken(); // Sử dụng useAuthToken
   const [booking, setBooking] = useState(null);
   const [user, setUser] = useState(null);
   const [payments, setPayments] = useState([]);
@@ -15,8 +17,7 @@ function BookingDetails() {
   useEffect(() => {
     const fetchPaymentData = async () => {
       try {
-        const token = localStorage.getItem("token");
-        if (!token) {
+        if (!accessToken) {
           navigate("/login");
           return;
         }
@@ -25,7 +26,7 @@ function BookingDetails() {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`,
+            "Authorization": `Bearer ${accessToken}`, // Sử dụng accessToken
           },
         });
 
@@ -51,20 +52,17 @@ function BookingDetails() {
       }
     };
 
-    // Lấy dữ liệu booking từ state
     const bookingFromState = location.state?.booking;
     if (bookingFromState) {
       setBooking(bookingFromState);
-      // Giả lập thông tin user (có thể thay bằng API thực tế nếu cần)
       setUser({ UserId: bookingFromState.UserId, FullName: "Nguyễn Văn A", Email: "nguyenvana@gmail.com", Phone: "0123456789" });
     } else {
       setError("Không tìm thấy thông tin đơn đặt phòng.");
     }
 
     fetchPaymentData();
-  }, [bookingId, navigate, location.state]);
+  }, [bookingId, navigate, location.state, accessToken]); // Thêm accessToken vào dependencies
 
-  // Hàm format ngày và giờ
   const formatDateTime = (dateString) => {
     if (!dateString) return "Chưa xác định";
     const date = new Date(dateString);

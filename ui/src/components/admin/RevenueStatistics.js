@@ -17,6 +17,7 @@ import {
 } from '@mui/material';
 import { styled } from '@mui/system';
 import { textFieldStyle } from '../../styles/RoomList.css'; // Import style từ RoomList.css
+import { useAuthToken } from '../../Utils/useAuthToken'; // Import useAuthToken
 
 // Giao diện giữ nguyên
 const StyledCard = styled(Card)(({ theme }) => ({
@@ -46,6 +47,7 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
 }));
 
 const RevenueStatistics = () => {
+  const { accessToken } = useAuthToken(); // Lấy accessToken từ useAuthToken
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [selectedMonth, setSelectedMonth] = useState('');
   const [selectedYear, setSelectedYear] = useState('');
@@ -85,20 +87,20 @@ const RevenueStatistics = () => {
       return;
     }
 
+    if (!accessToken) {
+      setError('Không tìm thấy token. Vui lòng đăng nhập lại.');
+      return;
+    }
+
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('Không tìm thấy token trong localStorage. Vui lòng đăng nhập lại.');
-      }
-
       // Sử dụng POST và gửi dữ liệu trong body
       const url = `http://localhost:5053/api/admin/statistics/revenue/month`;
       const response = await fetch(url, {
-        method: 'POST', // Đổi sang POST
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`, // Token từ localStorage với key 'token'
+          'Authorization': `Bearer ${accessToken}`, // Sử dụng accessToken từ useAuthToken
         },
         body: JSON.stringify({
           Month: month, // Viết hoa để khớp với DTO
@@ -130,8 +132,8 @@ const RevenueStatistics = () => {
 
   // Kết hợp textFieldStyle với các thuộc tính sx hiện có
   const customTextFieldStyle = {
-    ...textFieldStyle, // Áp dụng style từ RoomList.css
-    backgroundColor: '#fff', // Giữ màu nền trắng của container (không phải nền của input)
+    ...textFieldStyle,
+    backgroundColor: '#fff',
     borderRadius: '8px',
     '& .MuiInputBase-root': {
       ...textFieldStyle['& .MuiInputBase-root'],
@@ -168,7 +170,7 @@ const RevenueStatistics = () => {
             fullWidth
             value={selectedMonth}
             onChange={handleMonthChange}
-            sx={customTextFieldStyle} // Sử dụng style tùy chỉnh
+            sx={customTextFieldStyle}
           />
         </Grid>
         <Grid item xs={12} sm={5}>
@@ -178,7 +180,7 @@ const RevenueStatistics = () => {
             fullWidth
             value={selectedYear}
             onChange={handleYearChange}
-            sx={customTextFieldStyle} // Sử dụng style tùy chỉnh
+            sx={customTextFieldStyle}
           />
         </Grid>
         <Grid item xs={12} sm={2}>

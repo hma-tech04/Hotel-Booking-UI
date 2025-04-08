@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import '../styles/style.css';
+import { useAuthToken } from '../Utils/useAuthToken'; // Import useAuthToken
 
 function Header({ isAdmin, updateAdminStatus }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -12,14 +13,14 @@ function Header({ isAdmin, updateAdminStatus }) {
   const navigate = useNavigate();
   const location = useLocation();
   const dropdownRef = useRef(null);
+  const { accessToken } = useAuthToken(); // Lấy accessToken từ useAuthToken
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token && !isLoggedIn) {
+    if (accessToken && !isLoggedIn) {
       try {
-        const decodedToken = jwtDecode(token);
+        const decodedToken = jwtDecode(accessToken);
         console.log('Decoded token:', decodedToken);
-        const exp = decodedToken.exp * 1000; // Chuyển sang milliseconds
+        const exp = decodedToken.exp * 1000;
         if (Date.now() >= exp) {
           throw new Error('Token đã hết hạn');
         }
@@ -28,23 +29,23 @@ function Header({ isAdmin, updateAdminStatus }) {
         if (!userId) {
           throw new Error('Không tìm thấy nameid trong token');
         }
-        if (!userInfo) { // Chỉ gọi API nếu chưa có userInfo
+        if (!userInfo) {
           fetchUserInfo(userId);
         }
         const userName = decodedToken.given_name || decodedToken.username || decodedToken.email || 'Unknown';
         setUsername(isAdmin ? 'Admin' : userName);
         setUserInfo(decodedToken);
         if (typeof updateAdminStatus === 'function') {
-          updateAdminStatus(token);
+          updateAdminStatus(accessToken);
         }
       } catch (error) {
         console.error('Error decoding token in Header:', error.message);
         setIsLoggedIn(false);
         setUsername('');
         setUserInfo(null);
-        localStorage.removeItem('token'); // Xóa token không hợp lệ
+        localStorage.removeItem('token');
       }
-    } else if (!token && isLoggedIn) {
+    } else if (!accessToken && isLoggedIn) {
       setIsLoggedIn(false);
       setUsername('');
       setUserInfo(null);
@@ -52,13 +53,13 @@ function Header({ isAdmin, updateAdminStatus }) {
         updateAdminStatus(null);
       }
     }
-  }, [isAdmin, isLoggedIn, updateAdminStatus]); // Xóa location.pathname khỏi dependencies nếu không cần
+  }, [isAdmin, isLoggedIn, updateAdminStatus, accessToken]); // Thêm accessToken vào dependencies
 
   const fetchUserInfo = async (userId) => {
     try {
       const response = await fetch(`http://localhost:5053/api/user/id/${userId}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${accessToken}`, // Sử dụng accessToken
         },
       });
       if (!response.ok) {
@@ -81,7 +82,7 @@ function Header({ isAdmin, updateAdminStatus }) {
       }
     } catch (error) {
       console.error('Failed to fetch user info:', error.message);
-      setUserInfo(null); // Đặt lại userInfo nếu API thất bại
+      setUserInfo(null);
     }
   };
 
@@ -128,8 +129,8 @@ function Header({ isAdmin, updateAdminStatus }) {
             <img src="/images/logo.png" alt="Hotel Logo" />
           </Link>
           <ul className="nav-menu">
-            <li><Link to="/" className="nav-link" onClick={() => console.log('Home clicked in Header')}>Home</Link></li>
-            <li><Link to="/rooms" className="nav-link">Rooms</Link></li>
+            <li><Link to="/" className="nav-link" onClick={() => console.log('Home clicked in Header')}>Trang Chủ</Link></li>
+            <li><Link to="/rooms" className="nav-link">Xem phòng</Link></li>
             {isAdmin && (
               <li>
                 <Link to="/admin" className="nav-link">Admin</Link>
